@@ -24,23 +24,3 @@ flake8-black = "^0.2.1"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tox]
-isolated_build = true
-envlist = "py{35}-django{22}"
-
-[gh-actions]
-python =
-    3.5: py35
-
-[gh-actions:env]
-django-version =
-    2.2: django22
-
-[testenv]
-whitelist_externals = poetry
-deps =
-    django22: Django>=2.2,<2.3
-commands =
-    poetry install -v
-    poetry run pytest tests/
