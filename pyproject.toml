@@ -12,14 +12,12 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.5"
+python = "^3.6"
 
 [tool.poetry.dev-dependencies]
-black = [
-    {version = "*", python = "^3.6"}
-]
-flake8 = "^3.8.4"
-flake8-black = "^0.2.1"
+black = "*"
+flake8 = "*"
+flake8-black = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
