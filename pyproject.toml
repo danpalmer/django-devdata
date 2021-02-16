@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "django-devdata"
+version = "0.1.0"
+description = ""
+authors = ["Dan Palmer <dan@danpalmer.me>"]
+license = "MIT"
+packages = [
+    { include = "devdata", from = "src" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.5"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
