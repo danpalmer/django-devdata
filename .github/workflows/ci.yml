@@ -33,7 +33,7 @@ jobs:
         run: poetry install
 
       - name: Test
-        run: tox
+        run: poetry run tox
         env:
           django-version: ${{ matrix.django-version }}
 
