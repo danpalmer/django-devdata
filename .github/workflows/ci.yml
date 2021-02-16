@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        python-version: [3.5]
+        django-version: [2.2]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.1.0
+        with:
+          poetry-version: 1.1.4
+      
+      - name: Set up dependencies
+        run: poetry install
+
+      - name: Test
+        run: tox
+        env:
+          django-version: ${{ matrix.django-version }}
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up Poetry
+        uses: abatilo/actions-poetry@v2.1.0
+        with:
+          poetry-version: 1.1.4
+
+      - name: Install dependencies
+        run: |
+          poetry install
+
+      - name: Lint
+        run: |
+          poetry run flake8 . --jobs=auto --format=github
