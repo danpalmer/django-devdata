@@ -125,8 +125,12 @@ def sort_model_strategies(model_strategies):
             raise RuntimeError(
                 "Can't resolve dependencies for {} in serialized app list.".format(
                     ", ".join(
-                        "{}.{}".format(model._meta.app_label, model._meta.object_name)
-                        for model, _ in sorted(skipped, key=lambda obj: obj[0].__name__)
+                        "{}.{}".format(
+                            model._meta.app_label, model._meta.object_name
+                        )
+                        for model, _ in sorted(
+                            skipped, key=lambda obj: obj[0].__name__
+                        )
                     ),
                 ),
             )

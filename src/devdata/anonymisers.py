@@ -1,4 +1,6 @@
-def faker_anonymise(generator, *args, preserve_nulls=False, unique=False, **kwargs):
+def faker_anonymise(
+    generator, *args, preserve_nulls=False, unique=False, **kwargs
+):
     def anonymise(*, pii_value, fake, **_kwargs):
         if preserve_nulls and pii_value is None:
             return None
@@ -11,7 +13,9 @@ def faker_anonymise(generator, *args, preserve_nulls=False, unique=False, **kwar
 
 def preserve_internal(alternative):
     def anonymise(obj, field, pii_value, **kwargs):
-        if getattr(obj, "is_superuser", False) or getattr(obj, "is_staff", False):
+        if getattr(obj, "is_superuser", False) or getattr(
+            obj, "is_staff", False
+        ):
             return pii_value
         return alternative(obj=obj, field=field, pii_value=pii_value, **kwargs)
 

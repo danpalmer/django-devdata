@@ -209,10 +209,14 @@ class QuerySetStrategy(Exportable, Strategy):
     def sync_objects(self, django_dbname, model, objects):
         qs = model.objects.using(django_dbname)
         existing_pks = set(qs.values_list("pk", flat=True))
-        qs.bulk_create([x.object for x in objects if x.object.pk not in existing_pks])
+        qs.bulk_create(
+            [x.object for x in objects if x.object.pk not in existing_pks]
+        )
 
     def get_exported_pks_for_model(self, model):
-        return [str(x["pk"]) for x in self.get_exported_objects_for_model(model)]
+        return [
+            str(x["pk"]) for x in self.get_exported_objects_for_model(model)
+        ]
 
     def get_exported_objects_for_model(self, model):
         app_model_label = to_app_model_label(model)
@@ -245,7 +249,9 @@ class ExactQuerySetStrategy(QuerySetStrategy):
         return {**super().get_kwargs(model), "pks": self.pks}
 
     def get_queryset(self, django_dbname, model):
-        return super().get_queryset(django_dbname, model).filter(pk__in=self.pks)
+        return (
+            super().get_queryset(django_dbname, model).filter(pk__in=self.pks)
+        )
 
 
 class RandomSampleQuerySetStrategy(QuerySetStrategy):
@@ -260,7 +266,11 @@ class RandomSampleQuerySetStrategy(QuerySetStrategy):
         return {**super().get_kwargs(model), "count": self.count}
 
     def get_queryset(self, django_dbname, model):
-        return super().get_queryset(django_dbname, model).order_by("?")[: self.count]
+        return (
+            super()
+            .get_queryset(django_dbname, model)
+            .order_by("?")[: self.count]
+        )
 
 
 class LatestSampleQuerySetStrategy(QuerySetStrategy):

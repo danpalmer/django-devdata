@@ -16,7 +16,9 @@ class PiiAnonymisingSerializer(JSONSerializer):
 
         for field, value in data["fields"].items():
             if field in settings.DEVDATA_FIELD_ANONYMISERS:
-                data["fields"][field] = settings.DEVDATA_FIELD_ANONYMISERS[field](
+                data["fields"][field] = settings.DEVDATA_FIELD_ANONYMISERS[
+                    field
+                ](
                     obj=obj,
                     field=field,
                     pii_value=value,
