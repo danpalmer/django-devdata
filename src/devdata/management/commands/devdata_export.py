@@ -13,20 +13,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
-            'only',
-            nargs='*',
+            "only",
+            nargs="*",
             help="Only export specified models.",
-            metavar='app_label.ModelName',
+            metavar="app_label.ModelName",
         )
         parser.add_argument(
-            '--database',
+            "--database",
             help="The database name to sync.",
             default=DEFAULT_DB_ALIAS,
         )
         parser.add_argument(
-            '--no-update',
+            "--no-update",
             help="Skip updates that already exist and are non-empty.",
-            action='store_true',
+            action="store_true",
         )
 
     def handle(self, *, only=None, database, no_update, **options):

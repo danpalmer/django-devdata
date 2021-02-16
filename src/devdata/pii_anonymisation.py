@@ -14,9 +14,9 @@ class PiiAnonymisingSerializer(JSONSerializer):
     def get_dump_object(self, obj):
         data = super().get_dump_object(obj)
 
-        for field, value in data['fields'].items():
+        for field, value in data["fields"].items():
             if field in settings.DEVDATA_FIELD_ANONYMISERS:
-                data['fields'][field] = settings.DEVDATA_FIELD_ANONYMISERS[field](
+                data["fields"][field] = settings.DEVDATA_FIELD_ANONYMISERS[field](
                     obj=obj,
                     field=field,
                     pii_value=value,
@@ -30,7 +30,7 @@ class PiiAnonymisingSerializer(JSONSerializer):
             )
 
             if field in model_anonymisers:
-                data['fields'][field] = model_anonymisers[field](
+                data["fields"][field] = model_anonymisers[field](
                     obj=obj,
                     field=field,
                     pii_value=value,

@@ -34,35 +34,42 @@ def validate_strategies(only=None):
             not_found.append(app_model_label)
 
     if not_found:
-        raise AssertionError("\n".join([
-            "Found models without strategies for local database creation:\n",
-            *["  * {}".format(app_model_label) for app_model_label in not_found],
-        ]))
+        raise AssertionError(
+            "\n".join(
+                [
+                    "Found models without strategies for local database creation:\n",
+                    *[
+                        "  * {}".format(app_model_label)
+                        for app_model_label in not_found
+                    ],
+                ]
+            )
+        )
 
 
 def export_schema(django_dbname):
     db_conf = settings.DATABASES[django_dbname]
 
     schema_file_path().parent.mkdir(exist_ok=True)
-    with schema_file_path().open('w') as f:
+    with schema_file_path().open("w") as f:
         export_command = [
             *settings.DEVDATA_PGDUMP_COMMAND.split(),
-            db_conf['NAME'],
-            '--schema-only',
-            '--format=plain',
+            db_conf["NAME"],
+            "--schema-only",
+            "--format=plain",
             *get_pg_connection_args(db_conf),
         ]
 
         subprocess.run(export_command, stdout=f, check=True)
 
     migrations_file_path().parent.mkdir(exist_ok=True)
-    with migrations_file_path().open('w') as f:
+    with migrations_file_path().open("w") as f:
         export_command = [
             *settings.DEVDATA_PGDUMP_COMMAND.split(),
-            db_conf['NAME'],
-            '--data-only',
-            '--table=django_migrations',
-            '--format=plain',
+            db_conf["NAME"],
+            "--data-only",
+            "--table=django_migrations",
+            "--format=plain",
             *get_pg_connection_args(db_conf),
         ]
 
@@ -85,19 +92,19 @@ def export_data(django_dbname, only=None, no_update=False):
 
 def sync_schema(django_dbname):
     db_conf = settings.DATABASES[django_dbname]
-    pg_dbname = db_conf['NAME']
+    pg_dbname = db_conf["NAME"]
 
-    psql('DROP DATABASE IF EXISTS {}'.format(pg_dbname), None, db_conf)
+    psql("DROP DATABASE IF EXISTS {}".format(pg_dbname), None, db_conf)
     psql(
-        '''
+        """
         CREATE DATABASE {database} WITH
             TEMPLATE = template0
             ENCODING = 'UTF-8'
             LC_COLLATE = 'en_GB.UTF-8'
             LC_CTYPE = 'en_GB.UTF-8'
             OWNER = {owner}
-        '''.format(
-            owner=db_conf.get('USER', 'postgres'),
+        """.format(
+            owner=db_conf.get("USER", "postgres"),
             database=pg_dbname,
         ),
         None,

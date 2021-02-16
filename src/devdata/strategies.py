@@ -49,9 +49,9 @@ class Exportable:
 
     def data_file(self, app_model_label):
         return (
-            pathlib.Path(settings.DEVDATA_LOCAL_DIR) /
-            app_model_label /
-            '{}.json'.format(self.name)
+            pathlib.Path(settings.DEVDATA_LOCAL_DIR)
+            / app_model_label
+            / "{}.json".format(self.name)
         )
 
     def ensure_dir_exists(self, app_model_label):
@@ -95,9 +95,9 @@ class QuerySetStrategy(Exportable, Strategy):
             )
 
         return {
-            'name': self.name,
-            'anonymise': self.anonymise,
-            'restricted_pks': restricted_pks,
+            "name": self.name,
+            "anonymise": self.anonymise,
+            "restricted_pks": restricted_pks,
         }
 
     def get_queryset(self, django_dbname, model):
@@ -110,19 +110,23 @@ class QuerySetStrategy(Exportable, Strategy):
             # will usually be just one field, but in cases where it's multiple
             # to preserve FK integrity we must restrict all of them.
             fk_fields = [
-                x for x in model._meta.fields
+                x
+                for x in model._meta.fields
                 if x.related_model == restrict_model
                 if x.related_model != model
             ]
 
-            queryset = queryset.filter(*[
-                models.Q(
-                    **{x.attname: None},
-                ) | models.Q(
-                    **{'{}__in'.format(x.attname): restrict_pks},
-                )
-                for x in fk_fields
-            ])
+            queryset = queryset.filter(
+                *[
+                    models.Q(
+                        **{x.attname: None},
+                    )
+                    | models.Q(
+                        **{"{}__in".format(x.attname): restrict_pks},
+                    )
+                    for x in fk_fields
+                ]
+            )
 
         return queryset
 
@@ -132,7 +136,7 @@ class QuerySetStrategy(Exportable, Strategy):
         serializer = (
             PiiAnonymisingSerializer()
             if self.anonymise
-            else serializers.get_serializer('json')
+            else serializers.get_serializer("json")
         )
 
         serializer.serialize(
@@ -150,7 +154,7 @@ class QuerySetStrategy(Exportable, Strategy):
 
         if no_update and data_file.exists():
             # If we're not updating, and the file is valid data, then skip.
-            with data_file.open('r') as f:
+            with data_file.open("r") as f:
                 try:
                     json.load(f)
                     return
@@ -159,7 +163,9 @@ class QuerySetStrategy(Exportable, Strategy):
 
         command = settings.DEVDATA_DUMP_COMMAND.split()
         command.append(app_model_label)
-        command.append('{}.{}'.format(self.__class__.__module__, self.__class__.__name__))
+        command.append(
+            "{}.{}".format(self.__class__.__module__, self.__class__.__name__)
+        )
         command.append(django_dbname)
 
         self.ensure_dir_exists(app_model_label)
@@ -167,7 +173,7 @@ class QuerySetStrategy(Exportable, Strategy):
         # We pass the kwargs over stdin because if we have large querysets in
         # the upstream dependencies of this there could be too much data to pass
         # in the arguments to exec.
-        with TemporaryFile() as temp_f, TemporaryFile('wt') as kwargs_in_f:
+        with TemporaryFile() as temp_f, TemporaryFile("wt") as kwargs_in_f:
             json.dump(kwargs, kwargs_in_f)
             kwargs_in_f.seek(0)
 
@@ -180,41 +186,40 @@ class QuerySetStrategy(Exportable, Strategy):
 
             temp_f.seek(0)
 
-            with data_file.open('wb') as f:
+            with data_file.open("wb") as f:
                 written = f.write(temp_f.read())
 
         # Check if we got an empty JSON list, but assume that the file size will
         # be small if so, to prevent reading in huge data files.
         if written < 1000:
-            with data_file.open('r') as f:
+            with data_file.open("r") as f:
                 if json.load(f) == []:
-                    print("Warning! '{}' exporter for {} selected no data.".format(
-                        self.name,
-                        app_model_label,
-                    ))
+                    print(
+                        "Warning! '{}' exporter for {} selected no data.".format(
+                            self.name,
+                            app_model_label,
+                        )
+                    )
 
     def sync(self, django_dbname, model):
         with self.data_file(to_app_model_label(model)).open() as f:
-            objects = serializers.deserialize('json', f, using=django_dbname)
+            objects = serializers.deserialize("json", f, using=django_dbname)
             self.sync_objects(django_dbname, model, objects)
 
     def sync_objects(self, django_dbname, model, objects):
         qs = model.objects.using(django_dbname)
-        existing_pks = set(qs.values_list('pk', flat=True))
-        qs.bulk_create([
-            x.object for x in objects
-            if x.object.pk not in existing_pks
-        ])
+        existing_pks = set(qs.values_list("pk", flat=True))
+        qs.bulk_create([x.object for x in objects if x.object.pk not in existing_pks])
 
     def get_exported_pks_for_model(self, model):
-        return [str(x['pk']) for x in self.get_exported_objects_for_model(model)]
+        return [str(x["pk"]) for x in self.get_exported_objects_for_model(model)]
 
     def get_exported_objects_for_model(self, model):
         app_model_label = to_app_model_label(model)
         objects = []
 
         data_dir = pathlib.Path(settings.DEVDATA_LOCAL_DIR) / app_model_label
-        data_files = data_dir.glob('*.json')
+        data_files = data_dir.glob("*.json")
 
         for data_file in data_files:
             with data_file.open() as f:
@@ -237,7 +242,7 @@ class ExactQuerySetStrategy(QuerySetStrategy):
         self.pks = pks
 
     def get_kwargs(self, model):
-        return {**super().get_kwargs(model), 'pks': self.pks}
+        return {**super().get_kwargs(model), "pks": self.pks}
 
     def get_queryset(self, django_dbname, model):
         return super().get_queryset(django_dbname, model).filter(pk__in=self.pks)
@@ -252,16 +257,16 @@ class RandomSampleQuerySetStrategy(QuerySetStrategy):
         self.count = count
 
     def get_kwargs(self, model):
-        return {**super().get_kwargs(model), 'count': self.count}
+        return {**super().get_kwargs(model), "count": self.count}
 
     def get_queryset(self, django_dbname, model):
-        return super().get_queryset(django_dbname, model).order_by('?')[:self.count]
+        return super().get_queryset(django_dbname, model).order_by("?")[: self.count]
 
 
 class LatestSampleQuerySetStrategy(QuerySetStrategy):
     """Syncs the latest items from a QuerySet."""
 
-    def __init__(self, *args, count, order_by='-id', **kwargs):
+    def __init__(self, *args, count, order_by="-id", **kwargs):
         super().__init__(*args, **kwargs)
 
         self.count = count
@@ -270,13 +275,13 @@ class LatestSampleQuerySetStrategy(QuerySetStrategy):
     def get_kwargs(self, model):
         return {
             **super().get_kwargs(model),
-            'count': self.count,
-            'order_by': self.order_by,
+            "count": self.count,
+            "order_by": self.order_by,
         }
 
     def get_queryset(self, django_dbname, model):
         qs = super().get_queryset(django_dbname, model)
-        return qs.order_by(self.order_by)[:self.count]
+        return qs.order_by(self.order_by)[: self.count]
 
 
 class ModelReverseRelationshipQuerySetStrategy(QuerySetStrategy):
@@ -306,7 +311,7 @@ class ModelReverseRelationshipQuerySetStrategy(QuerySetStrategy):
     def get_kwargs(self, model):
         return {
             **super().get_kwargs(model),
-            'reverse_filter': self.get_reverse_filter(model),
+            "reverse_filter": self.get_reverse_filter(model),
         }
 
     def get_reverse_filter(self, model):

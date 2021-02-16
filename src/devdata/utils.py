@@ -17,7 +17,7 @@ def to_app_model_label(model: Model) -> str:
 
 @functools.lru_cache(maxsize=1024)
 def to_model(app_model_label: str) -> Model:
-    app_label, model_name = app_model_label.split('.')
+    app_label, model_name = app_model_label.split(".")
     return apps.get_model(app_label, model_name)
 
 
@@ -29,13 +29,13 @@ def get_pg_connection_args(db_conf):
     args = []
 
     for conf, arg in {
-        'HOST': 'host',
-        'PORT': 'port',
-        'USER': 'username',
-        'PASSWORD': 'password',
+        "HOST": "host",
+        "PORT": "port",
+        "USER": "username",
+        "PASSWORD": "password",
     }.items():
         if db_conf[conf]:
-            args.append('--{}={}'.format(arg, db_conf[conf]))
+            args.append("--{}={}".format(arg, db_conf[conf]))
 
     return args
 
@@ -43,15 +43,16 @@ def get_pg_connection_args(db_conf):
 def psql(command, pg_dbname, connection_settings):
     psql_command = [
         *settings.DEVDATA_PSQL_COMMAND.split(),
-        pg_dbname or 'postgres',
-        '-v', 'ON_ERROR_STOP=1',
+        pg_dbname or "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
         *get_pg_connection_args(connection_settings),
     ]
 
     try:
         subprocess.run(
             psql_command,
-            input=command.encode('utf-8'),
+            input=command.encode("utf-8"),
             check=True,
             stdout=subprocess.DEVNULL,
         )
@@ -60,11 +61,11 @@ def psql(command, pg_dbname, connection_settings):
 
 
 def schema_file_path():
-    return pathlib.Path(settings.DEVDATA_LOCAL_DIR) / 'schema.sql'
+    return pathlib.Path(settings.DEVDATA_LOCAL_DIR) / "schema.sql"
 
 
 def migrations_file_path():
-    return pathlib.Path(settings.DEVDATA_LOCAL_DIR) / 'migrations.sql'
+    return pathlib.Path(settings.DEVDATA_LOCAL_DIR) / "migrations.sql"
 
 
 def progress(sequence):
@@ -79,8 +80,8 @@ def sort_model_strategies(model_strategies):
         model = to_model(app_model_label)
         models.add(model)
 
-        if hasattr(model, 'natural_key'):
-            deps = getattr(model.natural_key, 'dependencies', [])
+        if hasattr(model, "natural_key"):
+            deps = getattr(model.natural_key, "dependencies", [])
             if deps:
                 deps = [apps.get_model(dep) for dep in deps]
         else:
@@ -92,13 +93,13 @@ def sort_model_strategies(model_strategies):
 
         for field in model._meta.many_to_many:
             if (
-                field.remote_field.through._meta.auto_created and
-                field.remote_field.model != model
+                field.remote_field.through._meta.auto_created
+                and field.remote_field.model != model
             ):
                 deps.append(field.remote_field.model)
 
         for strategy in strategies:
-            for dep in getattr(strategy, 'depends_on', ()):
+            for dep in getattr(strategy, "depends_on", ()):
                 deps.append(to_model(dep))
 
         model_dependencies.append((model, deps))
@@ -123,8 +124,8 @@ def sort_model_strategies(model_strategies):
         if not changed:
             raise RuntimeError(
                 "Can't resolve dependencies for {} in serialized app list.".format(
-                    ', '.join(
-                        '{}.{}'.format(model._meta.app_label, model._meta.object_name)
+                    ", ".join(
+                        "{}.{}".format(model._meta.app_label, model._meta.object_name)
                         for model, _ in sorted(skipped, key=lambda obj: obj[0].__name__)
                     ),
                 ),

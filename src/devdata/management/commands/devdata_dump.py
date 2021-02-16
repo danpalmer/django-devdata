@@ -14,29 +14,29 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            'model_label',
-            metavar='app_label[.ModelName]',
+            "model_label",
+            metavar="app_label[.ModelName]",
             help="Restricts dumped data to the specified app_label or app_label.ModelName.",
         )
         parser.add_argument(
-            'strategy_class',
-            metavar='foo.bar.MyStrategy',
+            "strategy_class",
+            metavar="foo.bar.MyStrategy",
             help="Export strategy class.",
         )
         parser.add_argument(
-            'database',
+            "database",
             help="The database name to sync.",
         )
         parser.add_argument(
-            'kwargs',
-            nargs='?',
-            type=argparse.FileType('r'),
+            "kwargs",
+            nargs="?",
+            type=argparse.FileType("r"),
             default=sys.stdin,
             help="Path to file containing JSON encoded kwargs for the strategy",
         )
 
     def handle(self, model_label, strategy_class, kwargs, database, **options):
-        app_name, model_name = model_label.split('.')
+        app_name, model_name = model_label.split(".")
         app_config = apps.get_app_config(app_name)
         model = app_config.get_model(model_name)
 

@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '--database',
+            "--database",
             help="The database name to sync.",
             default=DEFAULT_DB_ALIAS,
         )
@@ -23,14 +23,17 @@ class Command(BaseCommand):
         except AssertionError as e:
             raise CommandError(e)
 
-        if input(
-            "You're about to delete the database {} ({}) from the host {}. "
-            "Are you sure you want to continue? [y/N]: ".format(
-                self.style.WARNING(database),
-                self.style.WARNING(settings.DATABASES[database]['NAME']),
-                self.style.WARNING(socket.gethostname()),
-            ),
-        ).lower() != 'y':
+        if (
+            input(
+                "You're about to delete the database {} ({}) from the host {}. "
+                "Are you sure you want to continue? [y/N]: ".format(
+                    self.style.WARNING(database),
+                    self.style.WARNING(settings.DATABASES[database]["NAME"]),
+                    self.style.WARNING(socket.gethostname()),
+                ),
+            ).lower()
+            != "y"
+        ):
             raise CommandError("Aborted")
 
         sync_schema(database)
