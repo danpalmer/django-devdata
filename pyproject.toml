@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-devdata"
-version = "0.1.1"
+version = "0.1.2"
 description = ""
 authors = ["Dan Palmer <dan@danpalmer.me>"]
 license = "MIT"
