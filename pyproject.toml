@@ -11,8 +11,8 @@ packages = [
     { include = "devdata", from = "src" },
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.6.1"
+# [tool.poetry.dependencies]
+# python = ">=3.6.1"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
