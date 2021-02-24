@@ -1,16 +1,15 @@
 import json
 import pathlib
 import subprocess
-from typing import Set, Tuple
 from tempfile import TemporaryFile
+from typing import Set, Tuple
 
-from django.db import models
 from django.conf import settings
 from django.core import serializers
+from django.db import models
 
-from styleme.debug.devdata.pii_anonymisation import PiiAnonymisingSerializer
-
-from .utils import to_model, to_app_model_label
+from .pii_anonymisation import PiiAnonymisingSerializer
+from .utils import to_app_model_label, to_model
 
 
 class Strategy:

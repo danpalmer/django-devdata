@@ -1,9 +1,8 @@
 import faker
-
 from django.conf import settings
 from django.core.serializers.json import Serializer as JSONSerializer
 
-from styleme.debug.devdata.utils import to_app_model_label
+from .utils import to_app_model_label
 
 
 class PiiAnonymisingSerializer(JSONSerializer):

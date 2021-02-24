@@ -1,12 +1,12 @@
-import sys
-import json
 import argparse
+import json
+import sys
 
 from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.module_loading import import_string
 
-from styleme.debug.devdata.strategies import QuerySetStrategy
+from ...strategies import QuerySetStrategy
 
 
 class Command(BaseCommand):
