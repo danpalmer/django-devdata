@@ -176,12 +176,21 @@ class QuerySetStrategy(Exportable, Strategy):
             json.dump(kwargs, kwargs_in_f)
             kwargs_in_f.seek(0)
 
-            subprocess.run(
-                command,
-                stdin=kwargs_in_f,
-                stdout=temp_f,
-                check=True,
-            )
+            try:
+                subprocess.run(
+                    command,
+                    stdin=kwargs_in_f,
+                    stdout=temp_f,
+                    check=True,
+                )
+            except subprocess.CalledProcessError:
+                print(
+                    "Failed to export {} ({})".format(
+                        app_model_label,
+                        self.name,
+                    )
+                )
+                raise
 
             temp_f.seek(0)
 

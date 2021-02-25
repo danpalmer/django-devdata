@@ -86,7 +86,6 @@ def export_data(django_dbname, only=None, no_update=False):
         model = to_model(app_model_label)
 
         if isinstance(strategy, Exportable):
-            print("Exporting {} ({})".format(app_model_label, strategy.name))
             strategy.export(django_dbname, model, no_update)
 
 
