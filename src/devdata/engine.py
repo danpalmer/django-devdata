@@ -126,10 +126,10 @@ def sync_schema(django_dbname):
     )
 
     with schema_file_path().open() as f:
-        psql(f.read(), pg_dbname, db_conf)
+        psql(settings.DEVDATA_SQL_FILTER(f.read()), pg_dbname, db_conf)
 
     with migrations_file_path().open() as f:
-        psql(f.read(), pg_dbname, db_conf)
+        psql(settings.DEVDATA_SQL_FILTER(f.read()), pg_dbname, db_conf)
 
 
 def sync_data(django_dbname):
