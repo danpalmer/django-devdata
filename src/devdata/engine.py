@@ -105,7 +105,9 @@ def sync_schema(django_dbname):
                 END IF;
             END
         $do$
-        """.format(owner=pg_user),
+        """.format(
+            owner=pg_user
+        ),
         None,
         db_conf,
     )
