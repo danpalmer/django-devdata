@@ -1,21 +1,21 @@
 import subprocess
 
-from django.db import connections
 from django.conf import settings
 from django.core.management.color import no_style
+from django.db import connections
 
-from .utils import (
-    psql,
-    progress,
-    to_model,
-    get_all_models,
-    schema_file_path,
-    to_app_model_label,
-    migrations_file_path,
-    sort_model_strategies,
-    get_pg_connection_args,
-)
 from .strategies import Exportable
+from .utils import (
+    get_all_models,
+    get_pg_connection_args,
+    migrations_file_path,
+    progress,
+    psql,
+    schema_file_path,
+    sort_model_strategies,
+    to_app_model_label,
+    to_model,
+)
 
 
 def validate_strategies(only=None):
