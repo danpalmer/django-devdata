@@ -1,12 +1,10 @@
-import pathlib
 import functools
+import pathlib
 import subprocess
 
 import tqdm
-
 from django.apps import apps
 from django.conf import settings
-
 from django.db.models import Model
 
 
@@ -25,28 +23,12 @@ def get_all_models():
     return apps.get_models(include_auto_created=True)
 
 
-def get_pg_connection_args(db_conf):
-    args = []
-
-    for conf, arg in {
-        "HOST": "host",
-        "PORT": "port",
-        "USER": "username",
-        "PASSWORD": "password",
-    }.items():
-        if db_conf[conf]:
-            args.append("--{}={}".format(arg, db_conf[conf]))
-
-    return args
-
-
 def psql(command, pg_dbname, connection_settings):
     psql_command = [
         *settings.DEVDATA_PSQL_COMMAND.split(),
         pg_dbname or "postgres",
         "-v",
         "ON_ERROR_STOP=1",
-        *get_pg_connection_args(connection_settings),
     ]
 
     try:

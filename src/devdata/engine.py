@@ -7,7 +7,6 @@ from django.db import connections
 from .strategies import Exportable
 from .utils import (
     get_all_models,
-    get_pg_connection_args,
     migrations_file_path,
     progress,
     psql,
@@ -57,7 +56,6 @@ def export_schema(django_dbname):
             db_conf["NAME"],
             "--schema-only",
             "--format=plain",
-            *get_pg_connection_args(db_conf),
         ]
 
         subprocess.run(export_command, stdout=f, check=True)
@@ -70,7 +68,6 @@ def export_schema(django_dbname):
             "--data-only",
             "--table=django_migrations",
             "--format=plain",
-            *get_pg_connection_args(db_conf),
         ]
 
         subprocess.run(export_command, stdout=f, check=True)
