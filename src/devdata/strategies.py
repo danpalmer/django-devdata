@@ -147,18 +147,13 @@ class QuerySetStrategy(Exportable, Strategy):
         )
 
     def export(self, django_dbname, model, no_update):
-        kwargs = self.get_kwargs(model)
         app_model_label = to_app_model_label(model)
         data_file = self.data_file(app_model_label)
 
         if no_update and data_file.exists():
-            # If we're not updating, and the file is valid data, then skip.
-            with data_file.open("r") as f:
-                try:
-                    json.load(f)
-                    return
-                except json.JSONDecodeError:
-                    pass
+            return
+
+        kwargs = self.get_kwargs(model)
 
         command = settings.DEVDATA_DUMP_COMMAND.split()
         command.append(app_model_label)
