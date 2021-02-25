@@ -205,9 +205,15 @@ class QuerySetStrategy(Exportable, Strategy):
                     )
 
     def sync(self, django_dbname, model):
-        with self.data_file(to_app_model_label(model)).open() as f:
-            objects = serializers.deserialize("json", f, using=django_dbname)
-            self.sync_objects(django_dbname, model, objects)
+        app_model_label = to_app_model_label(model)
+
+        try:
+            with self.data_file(app_model_label).open() as f:
+                objects = serializers.deserialize("json", f, using=django_dbname)
+                self.sync_objects(django_dbname, model, objects)
+        except Exception:
+            print("Failed to sync {} ({})".format(app_model_label, self.name))
+            raise
 
     def sync_objects(self, django_dbname, model, objects):
         qs = model.objects.using(django_dbname)

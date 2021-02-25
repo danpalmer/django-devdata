@@ -134,10 +134,8 @@ def sync_schema(django_dbname):
 
 def sync_data(django_dbname):
     model_strategies = sort_model_strategies(settings.DEVDATA_STRATEGIES)
-    for app_model_label, strategy in model_strategies:
+    for app_model_label, strategy in progress(model_strategies):
         model = to_model(app_model_label)
-
-        print("Syncing {} ({})".format(app_model_label, strategy.name))
         strategy.sync(django_dbname, model)
 
 
