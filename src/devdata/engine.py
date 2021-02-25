@@ -101,7 +101,7 @@ def sync_schema(django_dbname):
                     WHERE  rolname = '{owner}'
                 )
                 THEN
-                    CREATE ROLE {owner} SUPERUSER;
+                    CREATE ROLE {owner} SUPERUSER LOGIN;
                 END IF;
             END
         $do$
