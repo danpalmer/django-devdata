@@ -89,8 +89,26 @@ def export_data(django_dbname, only=None, no_update=False):
 def sync_schema(django_dbname):
     db_conf = settings.DATABASES[django_dbname]
     pg_dbname = db_conf["NAME"]
+    pg_user = db_conf.get("USER") if db_conf.get("USER") else "postgres"
 
     psql("DROP DATABASE IF EXISTS {}".format(pg_dbname), None, db_conf)
+    psql(
+        """
+        DO $do$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT FROM pg_catalog.pg_roles
+                    WHERE  rolname = '{owner}'
+                )
+                THEN
+                    CREATE ROLE {owner} SUPERUSER;
+                END IF;
+            END
+        $do$
+        """.format(owner=pg_user),
+        None,
+        db_conf,
+    )
     psql(
         """
         CREATE DATABASE {database} WITH
@@ -100,7 +118,7 @@ def sync_schema(django_dbname):
             LC_CTYPE = 'en_GB.UTF-8'
             OWNER = {owner}
         """.format(
-            owner=db_conf.get("USER", "postgres"),
+            owner=pg_user,
             database=pg_dbname,
         ),
         None,
