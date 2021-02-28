@@ -1,10 +1,15 @@
 import socket
 
 from django.conf import settings
-from django.db.utils import DEFAULT_DB_ALIAS
 from django.core.management.base import BaseCommand, CommandError
+from django.db.utils import DEFAULT_DB_ALIAS
 
-from ...engine import import_data, import_schema, import_cleanup, validate_strategies
+from ...engine import (
+    import_cleanup,
+    import_data,
+    import_schema,
+    validate_strategies,
+)
 
 
 class Command(BaseCommand):

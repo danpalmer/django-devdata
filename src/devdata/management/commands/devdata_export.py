@@ -1,9 +1,9 @@
-from django.db.utils import DEFAULT_DB_ALIAS
 from django.core.management.base import (
     BaseCommand,
     CommandError,
     CommandParser,
 )
+from django.db.utils import DEFAULT_DB_ALIAS
 
 from ...engine import export_data, export_schema, validate_strategies
 
