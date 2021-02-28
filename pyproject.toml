@@ -11,6 +11,7 @@ packages = [
     { include = "devdata", from = "src" },
 ]
 
+# TODO(dist): Set Python version dependency once we don't need to support 3.5
 # [tool.poetry.dependencies]
 # python = ">=3.6.1"
 
