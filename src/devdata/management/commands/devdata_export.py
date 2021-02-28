@@ -20,7 +20,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--database",
-            help="The database name to sync.",
+            help="The database name to export from.",
             default=DEFAULT_DB_ALIAS,
         )
         parser.add_argument(

@@ -25,7 +25,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "database",
-            help="The database name to sync.",
+            help="The database name to export from.",
         )
         parser.add_argument(
             "kwargs",

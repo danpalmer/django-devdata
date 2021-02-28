@@ -86,7 +86,7 @@ def export_data(django_dbname, only=None, no_update=False):
             strategy.export(django_dbname, model, no_update)
 
 
-def sync_schema(django_dbname):
+def import_schema(django_dbname):
     db_conf = settings.DATABASES[django_dbname]
     pg_dbname = db_conf["NAME"]
     pg_user = db_conf.get("USER") if db_conf.get("USER") else "postgres"
@@ -134,20 +134,18 @@ def sync_schema(django_dbname):
         psql(settings.DEVDATA_SQL_FILTER(f.read()), pg_dbname, db_conf)
 
 
-def sync_data(django_dbname):
+def import_data(django_dbname):
     model_strategies = sort_model_strategies(settings.DEVDATA_STRATEGIES)
     for app_model_label, strategy in progress(model_strategies):
         model = to_model(app_model_label)
-        strategy.sync(django_dbname, model)
+        strategy.import_data(django_dbname, model)
 
 
-def sync_cleanup(django_dbname):
-    print("Resetting sequences")
+def import_cleanup(django_dbname):
     conn = connections[django_dbname]
     with conn.cursor() as cursor:
         for reset_sql in conn.ops.sequence_reset_sql(
             no_style(),
             get_all_models(),
         ):
-            # TODO: Handle Zendesk sequence not starting at 1
             cursor.execute(reset_sql)

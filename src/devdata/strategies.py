@@ -21,7 +21,7 @@ class Strategy:
     def __init__(self):
         pass
 
-    def sync(self, django_dbname, model):
+    def import_data(self, django_dbname, model):
         """Load data into newly created database."""
         raise NotImplementedError
 
@@ -39,7 +39,7 @@ class Exportable:
 
         self.name = name
 
-    def export(self, django_dbname, model, no_update=False):
+    def export_data(self, django_dbname, model, no_update=False):
         """
         Export the data to a directory on disk. `no_update` indicates not to
         update if there is any data already existing locally.
@@ -67,7 +67,7 @@ class Exportable:
 
 
 class QuerySetStrategy(Exportable, Strategy):
-    """Sync a table using an unfiltered QuerySet."""
+    """Import a table using an unfiltered QuerySet."""
 
     use_natural_foreign_keys = False
     use_natural_primary_keys = False
@@ -146,7 +146,7 @@ class QuerySetStrategy(Exportable, Strategy):
             stream=output,
         )
 
-    def export(self, django_dbname, model, no_update):
+    def export_data(self, django_dbname, model, no_update):
         app_model_label = to_app_model_label(model)
         data_file = self.data_file(app_model_label)
 
@@ -204,7 +204,7 @@ class QuerySetStrategy(Exportable, Strategy):
                         )
                     )
 
-    def sync(self, django_dbname, model):
+    def import_data(self, django_dbname, model):
         app_model_label = to_app_model_label(model)
 
         try:
@@ -212,12 +212,12 @@ class QuerySetStrategy(Exportable, Strategy):
                 objects = serializers.deserialize(
                     "json", f, using=django_dbname
                 )
-                self.sync_objects(django_dbname, model, objects)
+                self.import_objects(django_dbname, model, objects)
         except Exception:
-            print("Failed to sync {} ({})".format(app_model_label, self.name))
+            print("Failed to import {} ({})".format(app_model_label, self.name))
             raise
 
-    def sync_objects(self, django_dbname, model, objects):
+    def import_objects(self, django_dbname, model, objects):
         qs = model.objects.using(django_dbname)
         existing_pks = set(qs.values_list("pk", flat=True))
         qs.bulk_create(
@@ -250,7 +250,7 @@ class QuerySetStrategy(Exportable, Strategy):
 
 
 class ExactQuerySetStrategy(QuerySetStrategy):
-    """Sync specific rows from a table using a QuerySet filtered to given PKs."""
+    """Import specific rows from a table using a QuerySet filtered to given PKs."""
 
     def __init__(self, *args, pks, **kwargs):
         super().__init__(*args, **kwargs)
@@ -266,7 +266,7 @@ class ExactQuerySetStrategy(QuerySetStrategy):
 
 
 class RandomSampleQuerySetStrategy(QuerySetStrategy):
-    """Syncs a random sample from a QuerySet."""
+    """Imports a random sample from a QuerySet."""
 
     def __init__(self, *args, count, **kwargs):
         super().__init__(*args, **kwargs)
@@ -285,7 +285,7 @@ class RandomSampleQuerySetStrategy(QuerySetStrategy):
 
 
 class LatestSampleQuerySetStrategy(QuerySetStrategy):
-    """Syncs the latest items from a QuerySet."""
+    """Imports the latest items from a QuerySet."""
 
     def __init__(self, *args, count, order_by="-id", **kwargs):
         super().__init__(*args, **kwargs)
@@ -353,5 +353,5 @@ class FactoryStrategy(Strategy):
         super().__init__(*args, **kwargs)
         self.factories = factories
 
-    def sync(self, django_dbname, model):
+    def import_data(self, django_dbname, model):
         pass
