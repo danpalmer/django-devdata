@@ -63,7 +63,7 @@ class Exportable:
         self.seen_names.add(unique_key)
 
         model_dir = pathlib.Path(settings.DEVDATA_LOCAL_DIR) / app_model_label
-        model_dir.mkdir(exist_ok=True)
+        model_dir.mkdir(parents=True, exist_ok=True)
 
 
 class QuerySetStrategy(Exportable, Strategy):

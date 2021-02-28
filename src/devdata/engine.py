@@ -49,7 +49,7 @@ def validate_strategies(only=None):
 def export_schema(django_dbname):
     db_conf = settings.DATABASES[django_dbname]
 
-    schema_file_path().parent.mkdir(exist_ok=True)
+    schema_file_path().parent.mkdir(parents=True, exist_ok=True)
     with schema_file_path().open("w") as f:
         export_command = [
             *settings.DEVDATA_PGDUMP_COMMAND.split(),
@@ -60,7 +60,7 @@ def export_schema(django_dbname):
 
         subprocess.run(export_command, stdout=f, check=True)
 
-    migrations_file_path().parent.mkdir(exist_ok=True)
+    migrations_file_path().parent.mkdir(parents=True, exist_ok=True)
     with migrations_file_path().open("w") as f:
         export_command = [
             *settings.DEVDATA_PGDUMP_COMMAND.split(),
