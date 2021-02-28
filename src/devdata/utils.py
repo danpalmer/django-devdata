@@ -1,6 +1,7 @@
 import functools
 import pathlib
 import subprocess
+from typing import Optional
 
 import tqdm
 from django.apps import apps
@@ -14,9 +15,13 @@ def to_app_model_label(model: Model) -> str:
 
 
 @functools.lru_cache(maxsize=1024)
-def to_model(app_model_label: str) -> Model:
+def to_model(app_model_label: str) -> Optional[Model]:
     app_label, model_name = app_model_label.split(".")
-    return apps.get_model(app_label, model_name)
+    try:
+        return apps.get_model(app_label, model_name)
+    except LookupError:
+        # App is not installed, that's ok.
+        return None
 
 
 def get_all_models():
@@ -60,6 +65,9 @@ def sort_model_strategies(model_strategies):
 
     for app_model_label, strategies in model_strategies.items():
         model = to_model(app_model_label)
+        if not model:
+            continue
+
         models.add(model)
 
         if hasattr(model, "natural_key"):
