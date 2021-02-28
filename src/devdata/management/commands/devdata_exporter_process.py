@@ -6,7 +6,7 @@ from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError
 from django.utils.module_loading import import_string
 
-from ...strategies import QuerySetStrategy
+from ...strategies import Exportable
 
 
 class Command(BaseCommand):
@@ -43,7 +43,7 @@ class Command(BaseCommand):
         strategy_kwargs = json.load(kwargs)
         strategy = import_string(strategy_class)(**strategy_kwargs)
 
-        if not isinstance(strategy, QuerySetStrategy):
+        if not isinstance(strategy, Exportable):
             raise CommandError("Strategy not locally exportable")
 
         strategy.export_local(database, model, self.stdout)
