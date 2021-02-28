@@ -28,7 +28,7 @@ def get_all_models():
     return apps.get_models(include_auto_created=True)
 
 
-def psql(command, pg_dbname, connection_settings):
+def psql(command, pg_dbname):
     psql_command = [
         *settings.DEVDATA_PSQL_COMMAND.split(),
         pg_dbname or "postgres",
