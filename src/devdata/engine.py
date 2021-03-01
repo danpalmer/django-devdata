@@ -83,10 +83,14 @@ def export_data(django_dbname, only=None, no_update=False):
                 continue
 
             model = to_model(app_model_label)
-            bar.set_description('{} ({})'.format(app_model_label, strategy.name))
+            bar.set_description(
+                "{} ({})".format(app_model_label, strategy.name)
+            )
 
             if isinstance(strategy, Exportable):
-                strategy.export_data(django_dbname, model, exporter, no_update, log=bar.write)
+                strategy.export_data(
+                    django_dbname, model, exporter, no_update, log=bar.write
+                )
 
 
 def import_schema(django_dbname):
@@ -142,7 +146,7 @@ def import_data(django_dbname):
     bar = progress(model_strategies)
     for app_model_label, strategy in bar:
         model = to_model(app_model_label)
-        bar.set_description('{} ({})'.format(app_model_label, strategy.name))
+        bar.set_description("{} ({})".format(app_model_label, strategy.name))
         strategy.import_data(django_dbname, model)
 
 

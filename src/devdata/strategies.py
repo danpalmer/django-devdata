@@ -40,7 +40,14 @@ class Exportable:
 
         self.name = name
 
-    def export_data(self, django_dbname, model, exporter, no_update=False, log=lambda x: None):
+    def export_data(
+        self,
+        django_dbname,
+        model,
+        exporter,
+        no_update=False,
+        log=lambda x: None,
+    ):
         """
         Export the data to a directory on disk. `no_update` indicates not to
         update if there is any data already existing locally.
@@ -139,7 +146,7 @@ class QuerySetStrategy(Exportable, Strategy):
             else serializers.get_serializer("json")
         )
 
-        stream = codecs.getwriter('utf-8')(output)
+        stream = codecs.getwriter("utf-8")(output)
 
         serializer.serialize(
             queryset.iterator(),
@@ -149,7 +156,14 @@ class QuerySetStrategy(Exportable, Strategy):
             stream=stream,
         )
 
-    def export_data(self, django_dbname, model, exporter, no_update=False, log=lambda x: None):
+    def export_data(
+        self,
+        django_dbname,
+        model,
+        exporter,
+        no_update=False,
+        log=lambda x: None,
+    ):
         app_model_label = to_app_model_label(model)
         data_file = self.data_file(app_model_label)
 
@@ -157,7 +171,9 @@ class QuerySetStrategy(Exportable, Strategy):
             return
 
         kwargs = self.get_kwargs(model)
-        klass = "{}.{}".format(self.__class__.__module__, self.__class__.__name__)
+        klass = "{}.{}".format(
+            self.__class__.__module__, self.__class__.__name__
+        )
 
         self.ensure_dir_exists(app_model_label)
 
@@ -191,7 +207,9 @@ class QuerySetStrategy(Exportable, Strategy):
                 )
                 self.import_objects(django_dbname, model, objects)
         except Exception:
-            print("Failed to import {} ({})".format(app_model_label, self.name))
+            print(
+                "Failed to import {} ({})".format(app_model_label, self.name)
+            )
             raise
 
     def import_objects(self, django_dbname, model, objects):
