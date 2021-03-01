@@ -2,9 +2,8 @@ import contextlib
 import io
 import json
 import subprocess
-import sys
 from pathlib import Path
-from tempfile import NamedTemporaryFile, TemporaryDirectory, TemporaryFile
+from tempfile import TemporaryDirectory
 from typing import Any, Dict, Iterator, NamedTuple
 
 SEPARATOR_BYTE = b"\x00"

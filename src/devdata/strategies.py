@@ -1,9 +1,7 @@
 import codecs
 import json
 import pathlib
-import subprocess
-from tempfile import TemporaryFile
-from typing import Any, Dict, NamedTuple, Set, Tuple
+from typing import Set, Tuple
 
 from django.conf import settings
 from django.core import serializers
