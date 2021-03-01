@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.management.color import no_style
 from django.db import connections
 
+from .exporting import Exporter
 from .strategies import Exportable
 from .utils import (
     get_all_models,
@@ -75,15 +76,15 @@ def export_schema(django_dbname):
 
 def export_data(django_dbname, only=None, no_update=False):
     model_strategies = sort_model_strategies(settings.DEVDATA_STRATEGIES)
+    with Exporter(settings.DEVDATA_DUMP_COMMAND) as exporter:
+        for app_model_label, strategy in progress(model_strategies):
+            if only and app_model_label not in only:
+                continue
 
-    for app_model_label, strategy in progress(model_strategies):
-        if only and app_model_label not in only:
-            continue
+            model = to_model(app_model_label)
 
-        model = to_model(app_model_label)
-
-        if isinstance(strategy, Exportable):
-            strategy.export(django_dbname, model, no_update)
+            if isinstance(strategy, Exportable):
+                strategy.export_data(django_dbname, model, exporter, no_update)
 
 
 def import_schema(django_dbname):

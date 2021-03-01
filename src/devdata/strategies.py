@@ -1,8 +1,9 @@
+import codecs
 import json
 import pathlib
 import subprocess
 from tempfile import TemporaryFile
-from typing import Set, Tuple
+from typing import Any, Dict, NamedTuple, Set, Tuple
 
 from django.conf import settings
 from django.core import serializers
@@ -39,7 +40,7 @@ class Exportable:
 
         self.name = name
 
-    def export_data(self, django_dbname, model, no_update=False):
+    def export_data(self, django_dbname, model, exporter, no_update=False):
         """
         Export the data to a directory on disk. `no_update` indicates not to
         update if there is any data already existing locally.
@@ -138,15 +139,17 @@ class QuerySetStrategy(Exportable, Strategy):
             else serializers.get_serializer("json")
         )
 
+        stream = codecs.getwriter('utf-8')(output)
+
         serializer.serialize(
             queryset.iterator(),
             indent=self.json_indent,
             use_natural_foreign_keys=self.use_natural_foreign_keys,
             use_natural_primary_keys=self.use_natural_primary_keys,
-            stream=output,
+            stream=stream,
         )
 
-    def export_data(self, django_dbname, model, no_update):
+    def export_data(self, django_dbname, model, exporter, no_update=False):
         app_model_label = to_app_model_label(model)
         data_file = self.data_file(app_model_label)
 
@@ -154,43 +157,17 @@ class QuerySetStrategy(Exportable, Strategy):
             return
 
         kwargs = self.get_kwargs(model)
-
-        command = settings.DEVDATA_DUMP_COMMAND.split()
-        command.append(app_model_label)
-        command.append(
-            "{}.{}".format(self.__class__.__module__, self.__class__.__name__)
-        )
-        command.append(django_dbname)
+        klass = "{}.{}".format(self.__class__.__module__, self.__class__.__name__)
 
         self.ensure_dir_exists(app_model_label)
 
-        # We pass the kwargs over stdin because if we have large querysets in
-        # the upstream dependencies of this there could be too much data to pass
-        # in the arguments to exec.
-        with TemporaryFile() as temp_f, TemporaryFile("wt") as kwargs_in_f:
-            json.dump(kwargs, kwargs_in_f)
-            kwargs_in_f.seek(0)
-
-            try:
-                subprocess.run(
-                    command,
-                    stdin=kwargs_in_f,
-                    stdout=temp_f,
-                    check=True,
-                )
-            except subprocess.CalledProcessError:
-                print(
-                    "Failed to export {} ({})".format(
-                        app_model_label,
-                        self.name,
-                    )
-                )
-                raise
-
-            temp_f.seek(0)
-
-            with data_file.open("wb") as f:
-                written = f.write(temp_f.read())
+        written = exporter.export(
+            app_model_label=app_model_label,
+            strategy_class=klass,
+            strategy_kwargs=kwargs,
+            database=django_dbname,
+            output_path=data_file,
+        )
 
         # Check if we got an empty JSON list, but assume that the file size will
         # be small if so, to prevent reading in huge data files.
@@ -240,7 +217,7 @@ class QuerySetStrategy(Exportable, Strategy):
             with data_file.open() as f:
                 try:
                     data = json.load(f)
-                except json.JSONDecodeError:
+                except json.JSONDecodeError as e:
                     print("Invalid file {}".format(data_file))
                     raise
 
