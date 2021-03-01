@@ -40,7 +40,7 @@ class Exportable:
 
         self.name = name
 
-    def export_data(self, django_dbname, model, exporter, no_update=False):
+    def export_data(self, django_dbname, model, exporter, no_update=False, log=lambda x: None):
         """
         Export the data to a directory on disk. `no_update` indicates not to
         update if there is any data already existing locally.
@@ -149,7 +149,7 @@ class QuerySetStrategy(Exportable, Strategy):
             stream=stream,
         )
 
-    def export_data(self, django_dbname, model, exporter, no_update=False):
+    def export_data(self, django_dbname, model, exporter, no_update=False, log=lambda x: None):
         app_model_label = to_app_model_label(model)
         data_file = self.data_file(app_model_label)
 
@@ -174,7 +174,7 @@ class QuerySetStrategy(Exportable, Strategy):
         if written < 1000:
             with data_file.open("r") as f:
                 if json.load(f) == []:
-                    print(
+                    log(
                         "Warning! '{}' exporter for {} selected no data.".format(
                             self.name,
                             app_model_label,

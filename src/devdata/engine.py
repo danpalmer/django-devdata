@@ -77,14 +77,16 @@ def export_schema(django_dbname):
 def export_data(django_dbname, only=None, no_update=False):
     model_strategies = sort_model_strategies(settings.DEVDATA_STRATEGIES)
     with Exporter(settings.DEVDATA_DUMP_COMMAND) as exporter:
-        for app_model_label, strategy in progress(model_strategies):
+        bar = progress(model_strategies)
+        for app_model_label, strategy in bar:
             if only and app_model_label not in only:
                 continue
 
             model = to_model(app_model_label)
+            bar.set_description('{} ({})'.format(app_model_label, strategy.name))
 
             if isinstance(strategy, Exportable):
-                strategy.export_data(django_dbname, model, exporter, no_update)
+                strategy.export_data(django_dbname, model, exporter, no_update, log=bar.write)
 
 
 def import_schema(django_dbname):
@@ -137,8 +139,10 @@ def import_schema(django_dbname):
 
 def import_data(django_dbname):
     model_strategies = sort_model_strategies(settings.DEVDATA_STRATEGIES)
-    for app_model_label, strategy in progress(model_strategies):
+    bar = progress(model_strategies)
+    for app_model_label, strategy in bar:
         model = to_model(app_model_label)
+        bar.set_description('{} ({})'.format(app_model_label, strategy.name))
         strategy.import_data(django_dbname, model)
 
 
