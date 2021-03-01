@@ -1,4 +1,5 @@
 import functools
+import json
 import pathlib
 import subprocess
 from typing import Optional
@@ -132,3 +133,29 @@ def sort_model_strategies(model_strategies):
         for y in model_list
         for x in model_strategies[to_app_model_label(y)]
     ]
+
+
+@functools.lru_cache(maxsize=32)
+def get_exported_pks_for_model(model):
+    return [str(x["pk"]) for x in get_exported_objects_for_model(model)]
+
+
+@functools.lru_cache(maxsize=8)
+def get_exported_objects_for_model(model):
+    app_model_label = to_app_model_label(model)
+    objects = []
+
+    data_dir = pathlib.Path(settings.DEVDATA_LOCAL_DIR) / app_model_label
+    data_files = data_dir.glob("*.json")
+
+    for data_file in data_files:
+        with data_file.open() as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError as e:
+                print("Invalid file {}".format(data_file))
+                raise e
+
+            objects.extend(data)
+
+    return objects

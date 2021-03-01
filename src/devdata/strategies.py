@@ -10,7 +10,7 @@ from django.core import serializers
 from django.db import models
 
 from .pii_anonymisation import PiiAnonymisingSerializer
-from .utils import to_app_model_label, to_model
+from .utils import get_exported_pks_for_model, to_app_model_label, to_model
 
 
 class Strategy:
@@ -90,7 +90,7 @@ class QuerySetStrategy(Exportable, Strategy):
                 continue
 
             app_model_label = to_app_model_label(field.related_model)
-            restricted_pks[app_model_label] = self.get_exported_pks_for_model(
+            restricted_pks[app_model_label] = get_exported_pks_for_model(
                 field.related_model,
             )
 
@@ -200,30 +200,6 @@ class QuerySetStrategy(Exportable, Strategy):
         qs.bulk_create(
             [x.object for x in objects if x.object.pk not in existing_pks]
         )
-
-    def get_exported_pks_for_model(self, model):
-        return [
-            str(x["pk"]) for x in self.get_exported_objects_for_model(model)
-        ]
-
-    def get_exported_objects_for_model(self, model):
-        app_model_label = to_app_model_label(model)
-        objects = []
-
-        data_dir = pathlib.Path(settings.DEVDATA_LOCAL_DIR) / app_model_label
-        data_files = data_dir.glob("*.json")
-
-        for data_file in data_files:
-            with data_file.open() as f:
-                try:
-                    data = json.load(f)
-                except json.JSONDecodeError as e:
-                    print("Invalid file {}".format(data_file))
-                    raise
-
-                objects.extend(data)
-
-        return objects
 
 
 class ExactQuerySetStrategy(QuerySetStrategy):
