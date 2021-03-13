@@ -83,9 +83,9 @@ def export_data(django_dbname, only=None, no_update=False):
                 continue
 
             model = to_model(app_model_label)
-            bar.set_description(
-                "{} ({})".format(app_model_label, strategy.name)
-            )
+            bar.set_postfix({
+                'strategy': "{} ({})".format(app_model_label, strategy.name)
+            })
 
             if isinstance(strategy, Exportable):
                 strategy.export_data(
