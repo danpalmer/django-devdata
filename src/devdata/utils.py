@@ -1,3 +1,4 @@
+import contextlib
 import functools
 import itertools
 import json
@@ -151,3 +152,19 @@ def is_empty_iterator(iterator: Iterator[T]) -> Tuple[Iterator[T], bool]:
         iterator = itertools.chain([first], iterator)
 
     return (iterator, empty)
+
+
+@contextlib.contextmanager
+def disable_migrations():
+    original_migration_modules = settings.MIGRATION_MODULES
+
+    class DisableMigrations:
+        def __contains__(self, item):
+            return True
+
+        def __getitem__(self, item):
+            return None
+
+    settings.MIGRATION_MODULES = DisableMigrations()
+    yield
+    settings.MIGRATION_MODULES = original_migration_modules
