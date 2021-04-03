@@ -140,7 +140,9 @@ def import_data(django_dbname):
     bar = progress(model_strategies)
     for app_model_label, strategy in bar:
         model = to_model(app_model_label)
-        bar.set_description("{} ({})".format(app_model_label, strategy.name))
+        bar.set_postfix(
+            {"strategy": "{} ({})".format(app_model_label, strategy.name)}
+        )
         strategy.import_data(django_dbname, model)
 
 
