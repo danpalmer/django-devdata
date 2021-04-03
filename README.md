@@ -167,31 +167,9 @@ DEVDATA_MODEL_ANONYMISERS = {}
 # {'auth.User': {'first_name': faker_anonymise('first_name')}}
 
 # Required if using any exportable strategies.
-# The full path to the directory in which to store any exported data.
+# The full path to the directory in which to store any exported data. String or
+# Path object.
 DEVDATA_LOCAL_DIR = ...
-
-# Required
-# Command to run for psql, used for importing only. If psql is on the path in
-# your development environment no change is needed.
-DEVDATA_PSQL_COMMAND = 'psql'
-
-# Required
-# Command to run for pg_dump, used for exporting the schema and migrations only.
-# If running the export on the same machine as the database this can be left
-# unchanged, but typically this will need changing.
-DEVDATA_PGDUMP_COMMAND = 'pg_dump'
-# 'pg_dump -h my-database-host.local -u my-user'
-# 'ssh me@production pg_dump'
-
-# Optional
-# Command to run for QuerySetStrategy if exporting from another machine or
-# directory. If `None`, by default, no extra process is created, but if
-# provided, this command is used in a sub process. If overridden, this will
-# typically be a call to `devdata_dump`, but that management command may be
-# overridden itself so as long as the same arguments can be passed this can be
-# anything.
-DEVDATA_DUMP_COMMAND = None
-# 'ssh me@production /opt/my-app/manage.py devdata_dump'
 
 # Optional
 # List of locales to be used for Faker in generating anonymised data.
