@@ -14,7 +14,12 @@ class Command(BaseCommand):
     def handle(self, **options):
         for request in read_requests(sys.stdin.buffer):
             with response_writer(sys.stdout.buffer) as output:
-                self.handle_request(request, output)
+                try:
+                    self.handle_request(request, output)
+                except Exception as e:
+                    print(output, file=sys.stderr)
+                    output.write(str(e).encode('utf-8'))
+                    return
 
     def handle_request(self, request, output):
         app_name, model_name = request.app_model_label.split(".")

@@ -324,3 +324,8 @@ class FactoryStrategy(Strategy):
 
     def import_data(self, django_dbname, model):
         pass
+
+
+class FailingStrategy(Exportable, Strategy):
+    def export_data(self, *args, **kwargs):
+        raise ValueError("This strategy always fails.")

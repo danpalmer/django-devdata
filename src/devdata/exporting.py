@@ -23,7 +23,7 @@ ExportRequest = NamedTuple(
 def read_requests(fh: io.BytesIO) -> Iterator[ExportRequest]:
     buffer = bytes()
     while True:
-        buffer += fh.read1(BLOCK_SIZE)
+        buffer += fh.read(1)
 
         left, separator, right = buffer.partition(SEPARATOR_BYTE)
         if separator:
@@ -59,6 +59,7 @@ class Exporter:
             self.command.split(),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
+            bufsize=0,
         )
         self._process.__enter__()
         return self
@@ -94,9 +95,9 @@ class Exporter:
             with temp_file_path.open("wb") as output:
                 while True:
                     if self._process.poll() is not None:
-                        raise ExportFailed(self._process.returncode)
+                        raise ExportFailed("Export failed")
 
-                    self.buffer += self._process.stdout.read1(BLOCK_SIZE)
+                    self.buffer += self._process.stdout.read(1)
                     data, separator, rest = self.buffer.partition(
                         SEPARATOR_BYTE
                     )

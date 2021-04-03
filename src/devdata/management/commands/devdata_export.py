@@ -5,7 +5,8 @@ from django.core.management.base import (
 )
 from django.db.utils import DEFAULT_DB_ALIAS
 
-from ...engine import export_data, export_schema, validate_strategies
+from ...engine import export_data, export_migration_state, validate_strategies
+from ...exporting import ExportFailed
 
 
 class Command(BaseCommand):
@@ -35,5 +36,8 @@ class Command(BaseCommand):
         except AssertionError as e:
             raise CommandError(e)
 
-        export_schema(database)
-        export_data(database, only, no_update)
+        try:
+            export_migration_state(database)
+            export_data(database, only, no_update)
+        except ExportFailed as e:
+            print(str(e))

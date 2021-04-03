@@ -1,7 +1,6 @@
 import functools
 import json
 import pathlib
-import subprocess
 from typing import Optional
 
 import tqdm
@@ -27,29 +26,6 @@ def to_model(app_model_label: str) -> Optional[Model]:
 
 def get_all_models():
     return apps.get_models(include_auto_created=True)
-
-
-def psql(command, pg_dbname):
-    psql_command = [
-        *settings.DEVDATA_PSQL_COMMAND.split(),
-        pg_dbname or "postgres",
-        "-v",
-        "ON_ERROR_STOP=1",
-    ]
-
-    try:
-        subprocess.run(
-            psql_command,
-            input=command.encode("utf-8"),
-            check=True,
-            stdout=subprocess.DEVNULL,
-        )
-    except subprocess.CalledProcessError:
-        raise AssertionError("Process failed") from None
-
-
-def schema_file_path():
-    return pathlib.Path(settings.DEVDATA_LOCAL_DIR) / "schema.sql"
 
 
 def migrations_file_path():
