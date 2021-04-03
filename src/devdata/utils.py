@@ -1,7 +1,8 @@
 import functools
+import itertools
 import json
 import pathlib
-from typing import Optional
+from typing import Iterator, Optional, Tuple, TypeVar
 
 import tqdm
 from django.apps import apps
@@ -135,3 +136,17 @@ def get_exported_objects_for_model(model):
             objects.extend(data)
 
     return objects
+
+
+T = TypeVar('T')
+
+def is_empty_iterator(iterator: Iterator[T]) -> Tuple[Iterator[T], bool]:
+    try:
+        first = next(iterator)
+    except StopIteration:
+        empty = True
+    else:
+        empty = False
+        iterator = itertools.chain([first], iterator)
+    
+    return (iterator, empty)
