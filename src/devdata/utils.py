@@ -67,7 +67,7 @@ def sort_model_strategies(model_strategies):
                 deps.append(field.remote_field.model)
 
         for strategy in strategies:
-            for dep in getattr(strategy, "depends_on", ()):
+            for dep in strategy.depends_on:
                 deps.append(to_model(dep))
 
         model_dependencies.append((model, deps))

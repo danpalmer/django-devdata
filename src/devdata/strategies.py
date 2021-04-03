@@ -17,6 +17,8 @@ class Strategy:
     database.
     """
 
+    depends_on = ()  # type: Tuple[str, ...]
+
     def __init__(self):
         pass
 
@@ -291,8 +293,6 @@ class ModelReverseRelationshipQuerySetStrategy(QuerySetStrategy):
     explicit dependency on that model locally. Reads in those IDs, passes them
     to the exporting process, where they are available to `get_queryset`.
     """
-
-    depends_on = NotImplemented  # type: Tuple[str, ...]
 
     def __init__(self, *args, reverse_filter=None, **kwargs):
         super().__init__(*args, **kwargs)
