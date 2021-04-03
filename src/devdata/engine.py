@@ -75,6 +75,17 @@ def export_data(django_dbname, only=None, no_update=False):
             {"strategy": "{} ({})".format(app_model_label, strategy.name)}
         )
 
+        if app_model_label in (
+            'contenttypes.ContentTypes',
+            'auth.Permissions',
+        ):
+            bar.write(
+                "Warning! Exporter {} configured for {} may not import as "
+                "Django automatically manages this table. You may get "
+                "conflicts. It's recommended that you don't use any strategies "
+                "for this table.".format(app_model_label, strategy.name),
+            )
+
         if isinstance(strategy, Exportable):
             strategy.export_data(
                 django_dbname, model, no_update, log=bar.write
