@@ -31,7 +31,7 @@ def get_all_models():
 
 
 def migrations_file_path():
-    return pathlib.Path(settings.DEVDATA_LOCAL_DIR) / "migrations.sql"
+    return pathlib.Path(settings.DEVDATA_LOCAL_DIR) / "migrations.json"
 
 
 def progress(sequence):
