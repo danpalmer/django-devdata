@@ -6,7 +6,7 @@ from django.core.management.color import no_style
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections
 
-from .strategies import Exportable
+from .strategies import DeleteFirstQuerySetStrategy, Exportable
 from .utils import (
     disable_migrations,
     get_all_models,
@@ -80,12 +80,14 @@ def export_data(django_dbname, only=None, no_update=False):
         if app_model_label in (
             'contenttypes.ContentTypes',
             'auth.Permissions',
-        ):
+        ) and not isinstance(strategy, DeleteFirstQuerySetStrategy):
             bar.write(
-                "Warning! Exporter {} configured for {} may not import as "
-                "Django automatically manages this table. You may get "
-                "conflicts. It's recommended that you don't use any strategies "
-                "for this table.".format(app_model_label, strategy.name),
+                "Warning! Django auto-creates entries in {} which means there "
+                "may be conflicts on import. It's recommended that strategies "
+                "for this table inherit from `DeleteFirstQuerySetStrategy` to "
+                "ensure the table is cleared out first. This should be safe to "
+                "do if imports are done on a fresh database as is "
+                "recommended.".format(app_model_label, strategy.name),
             )
 
         if isinstance(strategy, Exportable):

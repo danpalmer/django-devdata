@@ -271,6 +271,13 @@ class ModelReverseRelationshipQuerySetStrategy(QuerySetStrategy):
         return qs.filter(**self.get_reverse_filter(model))
 
 
+class DeleteFirstQuerySetStrategy(QuerySetStrategy):
+    def import_objects(self, django_dbname, model, objects):
+        qs = model.objects.using(django_dbname)
+        qs.all().delete()
+        super().import_objects(django_dbname, model, objects)
+
+
 class FactoryStrategy(Strategy):
     """
     Use the provided factory/factories to create data for this model (and any
