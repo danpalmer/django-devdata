@@ -1,12 +1,14 @@
 import json
 
 from django.conf import settings
+from django.core.management import call_command
 from django.core.management.color import no_style
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections
 
 from .strategies import Exportable
 from .utils import (
+    disable_migrations,
     get_all_models,
     migrations_file_path,
     progress,
@@ -95,42 +97,42 @@ def export_data(django_dbname, only=None, no_update=False):
 def import_schema(django_dbname):
     db_conf = settings.DATABASES[django_dbname]
     pg_dbname = db_conf["NAME"]
-    pg_user = db_conf.get("USER") if db_conf.get("USER") else "postgres"
 
-    with connections[django_dbname]._nodb_connection.cursor() as cursor:
+    connection = connections[django_dbname]
+
+    with connection._nodb_connection.cursor() as cursor:
         cursor.execute("DROP DATABASE IF EXISTS {}".format(pg_dbname))
-        cursor.execute(
-            """
-            DO $do$
-                BEGIN
-                    IF NOT EXISTS (
-                        SELECT FROM pg_catalog.pg_roles
-                        WHERE  rolname = '{owner}'
-                    )
-                    THEN
-                        CREATE ROLE {owner} SUPERUSER LOGIN;
-                    END IF;
-                END
-            $do$
-            """.format(
-                owner=pg_user
-            ),
-        )
-        cursor.execute(
-            """
-            CREATE DATABASE {database} WITH
-                TEMPLATE = template0
-                ENCODING = 'UTF-8'
-                LC_COLLATE = 'en_GB.UTF-8'
-                LC_CTYPE = 'en_GB.UTF-8'
-                OWNER = {owner}
-            """.format(
-                owner=pg_user,
-                database=pg_dbname,
-            ),
+
+        creator = connection.creation
+        creator._execute_create_test_db(
+            cursor, 
+            {'dbname': pg_dbname, 'suffix': creator.sql_table_creation_suffix()
+            }
         )
 
-    # TODO: import migrations
+    with disable_migrations():
+        call_command(
+            'migrate',
+            verbosity=0,
+            interactive=False,
+            database=django_dbname,
+            run_syncdb=True,
+            skip_checks=True,
+        )
+
+    call_command('createcachetable', database=django_dbname, skip_checks=True)
+
+    with migrations_file_path().open() as f:
+        migrations = json.load(f)
+
+    with connection.cursor() as cursor:
+        cursor.executemany(
+            """
+            INSERT INTO django_migrations (app, name, applied)
+            VALUES (%s, %s, %s)
+            """,
+            [(x['app'], x['name'], x['applied']) for x in migrations],
+        )
 
 
 def import_data(django_dbname):
