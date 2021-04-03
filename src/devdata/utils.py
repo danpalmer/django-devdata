@@ -138,7 +138,8 @@ def get_exported_objects_for_model(model):
     return objects
 
 
-T = TypeVar('T')
+T = TypeVar("T")
+
 
 def is_empty_iterator(iterator: Iterator[T]) -> Tuple[Iterator[T], bool]:
     try:
@@ -148,5 +149,5 @@ def is_empty_iterator(iterator: Iterator[T]) -> Tuple[Iterator[T], bool]:
     else:
         empty = False
         iterator = itertools.chain([first], iterator)
-    
+
     return (iterator, empty)

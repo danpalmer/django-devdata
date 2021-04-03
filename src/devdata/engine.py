@@ -57,7 +57,7 @@ def export_migration_state(django_dbname):
                 """
             )
             migration_state = [
-                {'app': app, 'name': name, 'applied': applied}
+                {"app": app, "name": name, "applied": applied}
                 for app, name, applied in cursor.fetchall()
             ]
             json.dump(migration_state, f, indent=4, cls=DjangoJSONEncoder)
@@ -71,9 +71,9 @@ def export_data(django_dbname, only=None, no_update=False):
             continue
 
         model = to_model(app_model_label)
-        bar.set_postfix({
-            'strategy': "{} ({})".format(app_model_label, strategy.name)
-        })
+        bar.set_postfix(
+            {"strategy": "{} ({})".format(app_model_label, strategy.name)}
+        )
 
         if isinstance(strategy, Exportable):
             strategy.export_data(
@@ -118,7 +118,7 @@ def import_schema(django_dbname):
                 database=pg_dbname,
             ),
         )
-    
+
     # TODO: import migrations
 
 

@@ -107,7 +107,9 @@ class QuerySetStrategy(Exportable, Strategy):
     def get_queryset(self, django_dbname, model):
         queryset = model.objects.using(django_dbname)
 
-        for app_model_label, restrict_pks in self.get_restricted_pks(model).items():
+        for app_model_label, restrict_pks in self.get_restricted_pks(
+            model
+        ).items():
             restrict_model = to_model(app_model_label)
 
             # We filter to all fields that relate to the restricted model. This
@@ -158,7 +160,9 @@ class QuerySetStrategy(Exportable, Strategy):
         )
 
         with data_file.open("w") as output:
-            iterator, queryset_is_empty = is_empty_iterator(queryset.iterator())
+            iterator, queryset_is_empty = is_empty_iterator(
+                queryset.iterator()
+            )
             if queryset_is_empty:
                 log(
                     "Warning! '{}' exporter for {} selected no data.".format(
@@ -174,7 +178,6 @@ class QuerySetStrategy(Exportable, Strategy):
                 use_natural_primary_keys=self.use_natural_primary_keys,
                 stream=output,
             )
-
 
     def import_data(self, django_dbname, model):
         app_model_label = to_app_model_label(model)
