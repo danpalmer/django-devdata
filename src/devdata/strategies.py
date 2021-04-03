@@ -8,7 +8,12 @@ from django.core import serializers
 from django.db import models
 
 from .pii_anonymisation import PiiAnonymisingSerializer
-from .utils import get_exported_pks_for_model, to_app_model_label, to_model
+from .utils import (
+    get_exported_pks_for_model,
+    is_empty_iterator,
+    to_app_model_label,
+    to_model,
+)
 
 
 class Strategy:
@@ -44,7 +49,6 @@ class Exportable:
         self,
         django_dbname,
         model,
-        exporter,
         no_update=False,
         log=lambda x: None,
     ):
@@ -82,14 +86,11 @@ class QuerySetStrategy(Exportable, Strategy):
 
     json_indent = 2
 
-    def __init__(self, *args, restricted_pks=None, anonymise=True, **kwargs):
+    def __init__(self, *args, anonymise=True, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Only set in the remote dump process
-        self.restricted_pks = restricted_pks
         self.anonymise = anonymise
 
-    def get_kwargs(self, model):
+    def get_restricted_pks(self, model):
         restricted_pks = {}
 
         for field in model._meta.fields:
@@ -101,16 +102,12 @@ class QuerySetStrategy(Exportable, Strategy):
                 field.related_model,
             )
 
-        return {
-            "name": self.name,
-            "anonymise": self.anonymise,
-            "restricted_pks": restricted_pks,
-        }
+        return restricted_pks
 
     def get_queryset(self, django_dbname, model):
         queryset = model.objects.using(django_dbname)
 
-        for app_model_label, restrict_pks in self.restricted_pks.items():
+        for app_model_label, restrict_pks in self.get_restricted_pks(model).items():
             restrict_model = to_model(app_model_label)
 
             # We filter to all fields that relate to the restricted model. This
@@ -137,30 +134,10 @@ class QuerySetStrategy(Exportable, Strategy):
 
         return queryset
 
-    def export_local(self, django_dbname, model, output):
-        queryset = self.get_queryset(django_dbname, model)
-
-        serializer = (
-            PiiAnonymisingSerializer()
-            if self.anonymise
-            else serializers.get_serializer("json")
-        )
-
-        stream = codecs.getwriter("utf-8")(output)
-
-        serializer.serialize(
-            queryset.iterator(),
-            indent=self.json_indent,
-            use_natural_foreign_keys=self.use_natural_foreign_keys,
-            use_natural_primary_keys=self.use_natural_primary_keys,
-            stream=stream,
-        )
-
     def export_data(
         self,
         django_dbname,
         model,
-        exporter,
         no_update=False,
         log=lambda x: None,
     ):
@@ -170,32 +147,34 @@ class QuerySetStrategy(Exportable, Strategy):
         if no_update and data_file.exists():
             return
 
-        kwargs = self.get_kwargs(model)
-        klass = "{}.{}".format(
-            self.__class__.__module__, self.__class__.__name__
-        )
-
         self.ensure_dir_exists(app_model_label)
 
-        written = exporter.export(
-            app_model_label=app_model_label,
-            strategy_class=klass,
-            strategy_kwargs=kwargs,
-            database=django_dbname,
-            output_path=data_file,
+        queryset = self.get_queryset(django_dbname, model)
+
+        serializer = (
+            PiiAnonymisingSerializer()
+            if self.anonymise
+            else serializers.get_serializer("json")
         )
 
-        # Check if we got an empty JSON list, but assume that the file size will
-        # be small if so, to prevent reading in huge data files.
-        if written < 1000:
-            with data_file.open("r") as f:
-                if json.load(f) == []:
-                    log(
-                        "Warning! '{}' exporter for {} selected no data.".format(
-                            self.name,
-                            app_model_label,
-                        )
+        with data_file.open("w") as output:
+            iterator, queryset_is_empty = is_empty_iterator(queryset.iterator())
+            if queryset_is_empty:
+                log(
+                    "Warning! '{}' exporter for {} selected no data.".format(
+                        self.name,
+                        app_model_label,
                     )
+                )
+
+            serializer.serialize(
+                iterator,
+                indent=self.json_indent,
+                use_natural_foreign_keys=self.use_natural_foreign_keys,
+                use_natural_primary_keys=self.use_natural_primary_keys,
+                stream=output,
+            )
+
 
     def import_data(self, django_dbname, model):
         app_model_label = to_app_model_label(model)
@@ -227,9 +206,6 @@ class ExactQuerySetStrategy(QuerySetStrategy):
         super().__init__(*args, **kwargs)
         self.pks = pks
 
-    def get_kwargs(self, model):
-        return {**super().get_kwargs(model), "pks": self.pks}
-
     def get_queryset(self, django_dbname, model):
         return (
             super().get_queryset(django_dbname, model).filter(pk__in=self.pks)
@@ -243,9 +219,6 @@ class RandomSampleQuerySetStrategy(QuerySetStrategy):
         super().__init__(*args, **kwargs)
 
         self.count = count
-
-    def get_kwargs(self, model):
-        return {**super().get_kwargs(model), "count": self.count}
 
     def get_queryset(self, django_dbname, model):
         return (
@@ -263,13 +236,6 @@ class LatestSampleQuerySetStrategy(QuerySetStrategy):
 
         self.count = count
         self.order_by = order_by
-
-    def get_kwargs(self, model):
-        return {
-            **super().get_kwargs(model),
-            "count": self.count,
-            "order_by": self.order_by,
-        }
 
     def get_queryset(self, django_dbname, model):
         qs = super().get_queryset(django_dbname, model)
@@ -294,22 +260,12 @@ class ModelReverseRelationshipQuerySetStrategy(QuerySetStrategy):
     to the exporting process, where they are available to `get_queryset`.
     """
 
-    def __init__(self, *args, reverse_filter=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.reverse_filter = reverse_filter
-
-    def get_kwargs(self, model):
-        return {
-            **super().get_kwargs(model),
-            "reverse_filter": self.get_reverse_filter(model),
-        }
-
     def get_reverse_filter(self, model):
         raise NotImplementedError
 
     def get_queryset(self, django_dbname, model):
         qs = super().get_queryset(django_dbname, model)
-        return qs.filter(**self.reverse_filter)
+        return qs.filter(**self.get_reverse_filter(model))
 
 
 class FactoryStrategy(Strategy):
