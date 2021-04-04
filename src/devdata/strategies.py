@@ -1,5 +1,3 @@
-import codecs
-import json
 import pathlib
 from typing import Set, Tuple
 

@@ -1,5 +1,4 @@
 import faker
-from django.conf import settings
 from django.core.serializers.json import Serializer as JSONSerializer
 
 from .settings import settings

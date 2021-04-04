@@ -91,7 +91,7 @@ def export_data(django_dbname, only=None, no_update=False):
                 "for this table inherit from `DeleteFirstQuerySetStrategy` to "
                 "ensure the table is cleared out first. This should be safe to "
                 "do if imports are done on a fresh database as is "
-                "recommended.".format(app_model_label, strategy.name),
+                "recommended.".format(app_model_label),
             )
 
         if isinstance(strategy, Exportable):
