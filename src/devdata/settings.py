@@ -5,7 +5,7 @@ from django.utils.module_loading import import_string
 
 DEFAULT_FIELD_ANONYMISERS = {}
 DEFAULT_MODEL_ANONYMISERS = {}
-DEFAULT_FAKER_LOCALES = ['en_US']
+DEFAULT_FAKER_LOCALES = ["en_US"]
 
 
 class Settings:
@@ -29,11 +29,19 @@ class Settings:
 
     @property
     def field_anonymisers(self):
-        return getattr(django_settings, 'DEVDATA_FIELD_ANONYMISERS', DEFAULT_FIELD_ANONYMISERS)
+        return getattr(
+            django_settings,
+            "DEVDATA_FIELD_ANONYMISERS",
+            DEFAULT_FIELD_ANONYMISERS,
+        )
 
     @property
     def model_anonymisers(self):
-        return getattr(django_settings, 'DEVDATA_MODEL_ANONYMISERS', DEFAULT_MODEL_ANONYMISERS)
+        return getattr(
+            django_settings,
+            "DEVDATA_MODEL_ANONYMISERS",
+            DEFAULT_MODEL_ANONYMISERS,
+        )
 
     @property
     def local_dir(self):
@@ -41,9 +49,12 @@ class Settings:
 
     @property
     def faker_locales(self):
-        return getattr(django_settings, 'DEVDATA_FAKER_LOCALES', DEFAULT_FAKER_LOCALES)
+        return getattr(
+            django_settings, "DEVDATA_FAKER_LOCALES", DEFAULT_FAKER_LOCALES
+        )
 
     def __getattr__(self, name: str) -> Any:
         return getattr(django_settings, name)
+
 
 settings = Settings()
