@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-devdata"
-version = "0.1.8"
+version = "0.1.9"
 description = ""
 authors = ["Dan Palmer <dan@danpalmer.me>"]
 license = "MIT"
@@ -15,7 +15,7 @@ packages = [
 [tool.poetry.dependencies]
 # python = ">=3.6.1"
 tqdm = ">=4.0.0"
-Faker = ">=6.0.0"
+Faker = ">=5.0.0"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
