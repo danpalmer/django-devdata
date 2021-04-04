@@ -2,6 +2,7 @@
 Django default settings, customised as necessary for testing.
 """
 
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -59,6 +60,12 @@ DATABASES = {
         "NAME": "devdatatestdb",
     }
 }
+
+if 'POSTGRES_USER' is os.environ:
+    DATABASES['default']['USER'] = os.environ['POSTGRES_USER']
+
+if 'POSTGRES_PASSWORD' is os.environ:
+    DATABASES['default']['PASS'] = os.environ['POSTGRES_PASSWORD']
 
 AUTH_PASSWORD_VALIDATORS = [
     {

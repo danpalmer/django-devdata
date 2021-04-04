@@ -19,14 +19,18 @@ jobs:
       postgres:
         image: postgres:12
         env:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: ""
+          POSTGRES_USER: test-pg-user
+          POSTGRES_PASSWORD: test-pg-pass
           POSTGRES_DB: devdatatestdb
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+
+    env:
+      POSTGRES_USER: test-pg-user
+      POSTGRES_PASSWORD: test-pg-pass
 
     steps:
       - name: Checkout
