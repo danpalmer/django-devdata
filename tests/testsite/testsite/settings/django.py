@@ -61,11 +61,20 @@ DATABASES = {
     }
 }
 
+# Overrides for CI/testing. Not used by default because local development
+# doesn't typically need these.
+
 if "POSTGRES_USER" in os.environ:
     DATABASES["default"]["USER"] = os.environ["POSTGRES_USER"]
 
 if "POSTGRES_PASSWORD" in os.environ:
     DATABASES["default"]["PASS"] = os.environ["POSTGRES_PASSWORD"]
+
+if "POSTGRES_HOST" in os.environ:
+    DATABASES["default"]["HOST"] = os.environ["POSTGRES_HOST"]
+
+if "POSTGRES_PORT" in os.environ:
+    DATABASES["default"]["PORT"] = os.environ["POSTGRES_PORT"]
 
 AUTH_PASSWORD_VALIDATORS = [
     {
