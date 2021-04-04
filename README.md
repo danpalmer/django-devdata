@@ -176,3 +176,24 @@ DEVDATA_LOCAL_DIR = ...
 DEVDATA_FAKER_LOCALES = None
 # ['en_GB', 'en_AU']
 ```
+
+Strategies can be defined either as a strategy instance, or a tuple of
+dotted-path and kwargs, for example the following are equivalent:
+
+```python
+DEVDATA_STRATEGIES = {
+    'auth.User': [
+        QuerySetStrategy(name='all_users'),
+    ],
+}
+
+DEVDATA_STRATEGIES = {
+    'auth.User': [
+        ('devdata.strategies.QuerySetStrategy', {'name': 'all_users'}),
+    ],
+}
+```
+
+This alternate configuration format is provided in cases of extensive use of
+custom strategies, as strategies often import models, but due to the Django
+startup process models can't be imported until the settings have been imported.

@@ -1,6 +1,5 @@
 import socket
 
-from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db.utils import DEFAULT_DB_ALIAS
 
@@ -10,6 +9,7 @@ from ...engine import (
     import_schema,
     validate_strategies,
 )
+from ...settings import settings
 
 
 class Command(BaseCommand):

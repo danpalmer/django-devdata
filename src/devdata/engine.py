@@ -1,11 +1,11 @@
 import json
 
-from django.conf import settings
 from django.core.management import call_command
 from django.core.management.color import no_style
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections
 
+from .settings import settings
 from .strategies import DeleteFirstQuerySetStrategy, Exportable
 from .utils import (
     disable_migrations,
@@ -27,7 +27,7 @@ def validate_strategies(only=None):
 
         app_model_label = to_app_model_label(model)
 
-        if app_model_label not in settings.DEVDATA_STRATEGIES:
+        if app_model_label not in settings.strategies:
             if only and app_model_label not in only:
                 continue
 
@@ -66,7 +66,7 @@ def export_migration_state(django_dbname):
 
 
 def export_data(django_dbname, only=None, no_update=False):
-    model_strategies = sort_model_strategies(settings.DEVDATA_STRATEGIES)
+    model_strategies = sort_model_strategies(settings.strategies)
     bar = progress(model_strategies)
     for app_model_label, strategy in bar:
         if only and app_model_label not in only:
@@ -77,10 +77,14 @@ def export_data(django_dbname, only=None, no_update=False):
             {"strategy": "{} ({})".format(app_model_label, strategy.name)}
         )
 
-        if app_model_label in (
-            'contenttypes.ContentTypes',
-            'auth.Permissions',
-        ) and not isinstance(strategy, DeleteFirstQuerySetStrategy):
+        if (
+            app_model_label
+            in (
+                "contenttypes.ContentTypes",
+                "auth.Permissions",
+            )
+            and not isinstance(strategy, DeleteFirstQuerySetStrategy)
+        ):
             bar.write(
                 "Warning! Django auto-creates entries in {} which means there "
                 "may be conflicts on import. It's recommended that strategies "
@@ -107,14 +111,16 @@ def import_schema(django_dbname):
 
         creator = connection.creation
         creator._execute_create_test_db(
-            cursor, 
-            {'dbname': pg_dbname, 'suffix': creator.sql_table_creation_suffix()
-            }
+            cursor,
+            {
+                "dbname": pg_dbname,
+                "suffix": creator.sql_table_creation_suffix(),
+            },
         )
 
     with disable_migrations():
         call_command(
-            'migrate',
+            "migrate",
             verbosity=0,
             interactive=False,
             database=django_dbname,
@@ -122,7 +128,7 @@ def import_schema(django_dbname):
             skip_checks=True,
         )
 
-    call_command('createcachetable', database=django_dbname, skip_checks=True)
+    call_command("createcachetable", database=django_dbname, skip_checks=True)
 
     with migrations_file_path().open() as f:
         migrations = json.load(f)
@@ -133,12 +139,12 @@ def import_schema(django_dbname):
             INSERT INTO django_migrations (app, name, applied)
             VALUES (%s, %s, %s)
             """,
-            [(x['app'], x['name'], x['applied']) for x in migrations],
+            [(x["app"], x["name"], x["applied"]) for x in migrations],
         )
 
 
 def import_data(django_dbname):
-    model_strategies = sort_model_strategies(settings.DEVDATA_STRATEGIES)
+    model_strategies = sort_model_strategies(settings.strategies)
     bar = progress(model_strategies)
     for app_model_label, strategy in bar:
         model = to_model(app_model_label)

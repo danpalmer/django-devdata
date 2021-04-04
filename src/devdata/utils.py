@@ -7,8 +7,10 @@ from typing import Iterator, Optional, Tuple, TypeVar
 
 import tqdm
 from django.apps import apps
-from django.conf import settings
+from django.conf import settings as django_settings
 from django.db.models import Model
+
+from .settings import settings
 
 
 @functools.lru_cache(maxsize=1024)
@@ -31,7 +33,7 @@ def get_all_models():
 
 
 def migrations_file_path():
-    return pathlib.Path(settings.DEVDATA_LOCAL_DIR) / "migrations.json"
+    return pathlib.Path(settings.local_dir) / "migrations.json"
 
 
 def progress(sequence):
@@ -123,7 +125,7 @@ def get_exported_objects_for_model(model):
     app_model_label = to_app_model_label(model)
     objects = []
 
-    data_dir = pathlib.Path(settings.DEVDATA_LOCAL_DIR) / app_model_label
+    data_dir = pathlib.Path(settings.local_dir) / app_model_label
     data_files = data_dir.glob("*.json")
 
     for data_file in data_files:
@@ -156,7 +158,7 @@ def is_empty_iterator(iterator: Iterator[T]) -> Tuple[Iterator[T], bool]:
 
 @contextlib.contextmanager
 def disable_migrations():
-    original_migration_modules = settings.MIGRATION_MODULES
+    original_migration_modules = django_settings.MIGRATION_MODULES
 
     class DisableMigrations:
         def __contains__(self, item):
@@ -165,6 +167,6 @@ def disable_migrations():
         def __getitem__(self, item):
             return None
 
-    settings.MIGRATION_MODULES = DisableMigrations()
+    django_settings.MIGRATION_MODULES = DisableMigrations()
     yield
-    settings.MIGRATION_MODULES = original_migration_modules
+    django_settings.MIGRATION_MODULES = original_migration_modules
