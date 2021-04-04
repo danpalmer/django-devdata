@@ -61,11 +61,11 @@ DATABASES = {
     }
 }
 
-if 'POSTGRES_USER' is os.environ:
-    DATABASES['default']['USER'] = os.environ['POSTGRES_USER']
+if "POSTGRES_USER" in os.environ:
+    DATABASES["default"]["USER"] = os.environ["POSTGRES_USER"]
 
-if 'POSTGRES_PASSWORD' is os.environ:
-    DATABASES['default']['PASS'] = os.environ['POSTGRES_PASSWORD']
+if "POSTGRES_PASSWORD" in os.environ:
+    DATABASES["default"]["PASS"] = os.environ["POSTGRES_PASSWORD"]
 
 AUTH_PASSWORD_VALIDATORS = [
     {
