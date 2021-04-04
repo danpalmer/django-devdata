@@ -68,7 +68,7 @@ if "POSTGRES_USER" in os.environ:
     DATABASES["default"]["USER"] = os.environ["POSTGRES_USER"]
 
 if "POSTGRES_PASSWORD" in os.environ:
-    DATABASES["default"]["PASS"] = os.environ["POSTGRES_PASSWORD"]
+    DATABASES["default"]["PASSWORD"] = os.environ["POSTGRES_PASSWORD"]
 
 if "POSTGRES_HOST" in os.environ:
     DATABASES["default"]["HOST"] = os.environ["POSTGRES_HOST"]
