@@ -32,8 +32,8 @@ def get_all_models():
     return apps.get_models(include_auto_created=True)
 
 
-def migrations_file_path():
-    return pathlib.Path(settings.local_dir) / "migrations.json"
+def migrations_file_path(dir):
+    return dir / "migrations.json"
 
 
 def progress(sequence):
@@ -116,16 +116,16 @@ def sort_model_strategies(model_strategies):
 
 
 @functools.lru_cache(maxsize=32)
-def get_exported_pks_for_model(model):
-    return [str(x["pk"]) for x in get_exported_objects_for_model(model)]
+def get_exported_pks_for_model(dest, model):
+    return [str(x["pk"]) for x in get_exported_objects_for_model(dest, model)]
 
 
 @functools.lru_cache(maxsize=8)
-def get_exported_objects_for_model(model):
+def get_exported_objects_for_model(dest, model):
     app_model_label = to_app_model_label(model)
     objects = []
 
-    data_dir = pathlib.Path(settings.local_dir) / app_model_label
+    data_dir = dest / app_model_label
     data_files = data_dir.glob("*.json")
 
     for data_file in data_files:

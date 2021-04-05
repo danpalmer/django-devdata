@@ -59,7 +59,7 @@ def test_export(test_data_dir):
         run_command("loaddata", "--format=json", "-", stdin=f)
 
     # Run the export
-    process = run_command("devdata_export")
+    process = run_command("devdata_export", "test-export")
     assert_ran_successfully(process)
 
     # Read in the exported data

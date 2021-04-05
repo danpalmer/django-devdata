@@ -47,9 +47,11 @@ def validate_strategies(only=None):
         )
 
 
-def export_migration_state(django_dbname):
-    migrations_file_path().parent.mkdir(parents=True, exist_ok=True)
-    with migrations_file_path().open("w") as f:
+def export_migration_state(django_dbname, dest):
+    file_path = migrations_file_path(dest)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with file_path.open("w") as f:
         with connections[django_dbname].cursor() as cursor:
             cursor.execute(
                 """
@@ -65,7 +67,7 @@ def export_migration_state(django_dbname):
             json.dump(migration_state, f, indent=4, cls=DjangoJSONEncoder)
 
 
-def export_data(django_dbname, only=None, no_update=False):
+def export_data(django_dbname, dest, only=None, no_update=False):
     model_strategies = sort_model_strategies(settings.strategies)
     bar = progress(model_strategies)
     for app_model_label, strategy in bar:
@@ -96,7 +98,7 @@ def export_data(django_dbname, only=None, no_update=False):
 
         if isinstance(strategy, Exportable):
             strategy.export_data(
-                django_dbname, model, no_update, log=bar.write
+                django_dbname, dest, model, no_update, log=bar.write
             )
 
 

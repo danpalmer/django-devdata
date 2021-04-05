@@ -44,10 +44,6 @@ class Settings:
         )
 
     @property
-    def local_dir(self):
-        return django_settings.DEVDATA_LOCAL_DIR
-
-    @property
     def faker_locales(self):
         return getattr(
             django_settings, "DEVDATA_FAKER_LOCALES", DEFAULT_FAKER_LOCALES

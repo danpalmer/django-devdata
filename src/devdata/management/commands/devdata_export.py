@@ -1,3 +1,6 @@
+import argparse
+from pathlib import Path
+
 from django.core.management.base import (
     BaseCommand,
     CommandError,
@@ -13,8 +16,14 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser: CommandParser) -> None:
         parser.add_argument(
+            "dest",
+            nargs=argparse.OPTIONAL,
+            help="Export destination",
+            default="./devdata",
+        )
+        parser.add_argument(
             "only",
-            nargs="*",
+            nargs=argparse.ZERO_OR_MORE,
             help="Only export specified models.",
             metavar="app_label.ModelName",
         )
@@ -29,11 +38,13 @@ class Command(BaseCommand):
             action="store_true",
         )
 
-    def handle(self, *, only=None, database, no_update, **options):
+    def handle(self, *, dest, only=None, database, no_update, **options):
         try:
             validate_strategies(only)
         except AssertionError as e:
             raise CommandError(e)
+        
+        dest_dir = (Path.cwd() / dest).absolute()
 
-        export_migration_state(database)
-        export_data(database, only, no_update)
+        export_migration_state(database, dest_dir)
+        export_data(database, dest_dir, only, no_update)

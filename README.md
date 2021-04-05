@@ -166,11 +166,6 @@ DEVDATA_FIELD_ANONYMISERS = {}
 DEVDATA_MODEL_ANONYMISERS = {}
 # {'auth.User': {'first_name': faker_anonymise('first_name')}}
 
-# Required if using any exportable strategies.
-# The full path to the directory in which to store any exported data. String or
-# Path object.
-DEVDATA_LOCAL_DIR = ...
-
 # Optional
 # List of locales to be used for Faker in generating anonymised data.
 DEVDATA_FAKER_LOCALES = None

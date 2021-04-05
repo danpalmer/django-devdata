@@ -56,14 +56,14 @@ class Exportable:
         """
         pass
 
-    def data_file(self, app_model_label):
+    def data_file(self, dest, app_model_label):
         return (
-            pathlib.Path(settings.DEVDATA_LOCAL_DIR)
+            dest
             / app_model_label
             / "{}.json".format(self.name)
         )
 
-    def ensure_dir_exists(self, app_model_label):
+    def ensure_dir_exists(self, dest, app_model_label):
         unique_key = (app_model_label, self.name)
         if unique_key in self.seen_names:
             raise ValueError(
@@ -72,7 +72,7 @@ class Exportable:
             )
         self.seen_names.add(unique_key)
 
-        model_dir = pathlib.Path(settings.DEVDATA_LOCAL_DIR) / app_model_label
+        model_dir = dest / app_model_label
         model_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -88,7 +88,7 @@ class QuerySetStrategy(Exportable, Strategy):
         super().__init__(*args, **kwargs)
         self.anonymise = anonymise
 
-    def get_restricted_pks(self, model):
+    def get_restricted_pks(self, dest, model):
         restricted_pks = {}
 
         for field in model._meta.fields:
@@ -97,16 +97,18 @@ class QuerySetStrategy(Exportable, Strategy):
 
             app_model_label = to_app_model_label(field.related_model)
             restricted_pks[app_model_label] = get_exported_pks_for_model(
+                dest,
                 field.related_model,
             )
 
         return restricted_pks
 
-    def get_queryset(self, django_dbname, model):
+    def get_queryset(self, django_dbname, dest, model):
         queryset = model.objects.using(django_dbname)
 
         for app_model_label, restrict_pks in self.get_restricted_pks(
-            model
+            dest,
+            model,
         ).items():
             restrict_model = to_model(app_model_label)
 
@@ -137,19 +139,20 @@ class QuerySetStrategy(Exportable, Strategy):
     def export_data(
         self,
         django_dbname,
+        dest,
         model,
         no_update=False,
         log=lambda x: None,
     ):
         app_model_label = to_app_model_label(model)
-        data_file = self.data_file(app_model_label)
+        data_file = self.data_file(dest, app_model_label)
 
         if no_update and data_file.exists():
             return
 
-        self.ensure_dir_exists(app_model_label)
+        self.ensure_dir_exists(dest, app_model_label)
 
-        queryset = self.get_queryset(django_dbname, model)
+        queryset = self.get_queryset(django_dbname, dest, model)
 
         serializer = (
             PiiAnonymisingSerializer()
