@@ -131,7 +131,7 @@ def import_schema(django_dbname):
             skip_checks=True,
         )
 
-    call_command("createcachetable", database=django_dbname, skip_checks=True)
+    call_command("createcachetable", database=django_dbname)
 
     with migrations_file_path().open() as f:
         migrations = json.load(f)
