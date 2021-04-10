@@ -1,3 +1,8 @@
+import random
+
+from .utils import get_exported_pks_for_model
+
+
 def faker_anonymise(
     generator, *args, preserve_nulls=False, unique=False, **kwargs
 ):
@@ -31,6 +36,7 @@ def const(value, preserve_nulls=False):
     return anonymise
 
 
-def random_foreign_key(obj, field, **_kwargs):
-    rel = obj._meta.fields[field].related_model.objects.order_by("?").get()
-    return rel.pk
+def random_foreign_key(obj, field, dest, **_kwargs):
+    related_model = obj._meta.get_field(field).related_model
+    exported_pks = get_exported_pks_for_model(dest, related_model)
+    return random.choice(exported_pks)

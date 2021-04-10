@@ -151,7 +151,7 @@ class QuerySetStrategy(Exportable, Strategy):
         queryset = self.get_queryset(django_dbname, dest, model)
 
         serializer = (
-            PiiAnonymisingSerializer()
+            PiiAnonymisingSerializer(dest=dest)
             if self.anonymise
             else serializers.get_serializer("json")
         )

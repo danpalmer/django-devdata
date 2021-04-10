@@ -6,9 +6,10 @@ from .utils import to_app_model_label
 
 
 class PiiAnonymisingSerializer(JSONSerializer):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, dest, **kwargs):
         super().__init__(*args, **kwargs)
         self.fake = faker.Faker(locale=settings.faker_locales)
+        self.dest = dest
 
     def get_dump_object(self, obj):
         data = super().get_dump_object(obj)
@@ -20,6 +21,7 @@ class PiiAnonymisingSerializer(JSONSerializer):
                     field=field,
                     pii_value=value,
                     fake=self.fake,
+                    dest=self.dest,
                 )
 
             app_model_label = to_app_model_label(obj.__class__)
@@ -34,6 +36,7 @@ class PiiAnonymisingSerializer(JSONSerializer):
                     field=field,
                     pii_value=value,
                     fake=self.fake,
+                    dest=self.dest,
                 )
 
         return data
