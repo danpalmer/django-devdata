@@ -43,7 +43,7 @@ class Command(BaseCommand):
             validate_strategies(only)
         except AssertionError as e:
             raise CommandError(e)
-        
+
         dest_dir = (Path.cwd() / dest).absolute()
 
         export_migration_state(database, dest_dir)
