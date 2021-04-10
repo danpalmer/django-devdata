@@ -1,11 +1,16 @@
 import collections
 import itertools
 import json
+from typing import Any, Dict, Iterable, Set
 
 import pytest
 from django.core import serializers
 from django.db import transaction
 from utils import assert_ran_successfully, run_command
+
+from devdata.utils import to_app_model_label, to_model
+
+TestObject = Dict[str, Any]
 
 ALL_TEST_STRATEGIES = (
     ("admin.LogEntry", "default"),
@@ -56,14 +61,35 @@ class DevdataTestBase:
             exported = itertools.chain(*strategies.values())
         return set(x["pk"] for x in exported)
 
+    def _filter_exported(
+        self, lookup: Dict[str, Set], objects: Iterable[TestObject]
+    ) -> Iterable[TestObject]:
+        obj = objects[0]  # Same model so we just use the first for structure
+        model_name = obj["model"]
+        model = to_model(model_name)
+
+        fk_fields = [
+            (x.attname, to_app_model_label(x.related_model))
+            for x in model._meta.fields
+            if x.related_model
+        ]
+        if not fk_fields:
+            yield from objects
+            return
+
+        for obj in objects:
+            for field, model in fk_fields:
+                if obj["fields"][field] in lookup[model]:
+                    yield obj
+
     # Test structure
 
     def test_export(self, test_data_dir):
         with transaction.atomic():
             data = json.dumps(self.get_original_data())
             objects = serializers.deserialize("json", data)
-            for object in objects:
-                object.save()
+            for obj in objects:
+                obj.save()
 
         # Run the export
         process = run_command(
@@ -102,17 +128,29 @@ class DevdataTestBase:
             path.write_text(empty_model)
 
         # Write out data to the filesystem as if it had been exported
-        data = collections.defaultdict(lambda: collections.defaultdict(list))
-        for object in self.get_original_data():
-            data[object["model"]][object["strategy"]].append(object)
+        data = collections.defaultdict(
+            lambda: collections.defaultdict(list)
+        )  # type: Dict[str, Dict[str, TestObject]]
+        exported_pks = collections.defaultdict(set)  # type: Dict[str, Set]
+        for obj in self.get_original_data():
+            if obj["strategy"] is None:
+                continue
+            exported_pks[obj["model"]].add(obj["pk"])
+            data[obj["model"]][obj["strategy"]].append(obj)
 
         for model, strategies in data.items():
             for strategy, objects in strategies.items():
                 path = test_data_dir / model / f"{strategy}.json"
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(json.dumps(objects))
+                path.write_text(
+                    json.dumps(
+                        list(self._filter_exported(exported_pks, objects))
+                    )
+                )
 
         (test_data_dir / "migrations.json").write_text(empty_model)
+
+        # TODO: wait for connections to drop
 
         # Run the import
         process = run_command(
@@ -120,10 +158,12 @@ class DevdataTestBase:
             test_data_dir.name,
             "--no-input",
         )
-        assert_ran_successfully(process)
 
         # Unblock the database so that we can resume accessing it. This will be
         # a different actual database on disk at this point, as the import will
-        # have recreated it.
+        # have recreated it. We do this before assertions so that we've
+        # restored database access for later tests if needed.
         django_db_blocker.unblock()
+
+        assert_ran_successfully(process)
         self.assert_on_imported_data()

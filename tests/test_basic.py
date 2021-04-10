@@ -19,7 +19,7 @@ class TestPollsBasic(DevdataTestBase):
                 "strategy": "default",
                 "pk": 101,
                 "fields": {
-                    "question": 101,
+                    "question_id": 101,
                     "choice_text": "choice 1",
                     "votes": 0,
                 },
@@ -29,7 +29,7 @@ class TestPollsBasic(DevdataTestBase):
                 "strategy": "default",
                 "pk": 102,
                 "fields": {
-                    "question": 101,
+                    "question_id": 101,
                     "choice_text": "choice 1",
                     "votes": 5,
                 },
@@ -48,7 +48,7 @@ class TestPollsBasic(DevdataTestBase):
                 "strategy": "default",
                 "pk": 103,
                 "fields": {
-                    "question": 102,
+                    "question_id": 102,
                     "choice_text": "choice 1",
                     "votes": 999,
                 },

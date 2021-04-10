@@ -64,6 +64,6 @@ DEVDATA_STRATEGIES = {
     ],
     "auth.User": [
         InternalUsersStrategy(name="internal"),
-        ExactQuerySetStrategy(name="test_users", pks=(202,)),
+        ExactQuerySetStrategy(name="test_users", pks=(102,)),
     ],
 }
