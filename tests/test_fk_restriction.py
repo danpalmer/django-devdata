@@ -1,6 +1,5 @@
-from base import DevdataTestBase
 from django.contrib.auth.models import User
-from factories import make_photo_data, make_user_data
+from test_infrastructure import DevdataTestBase, make_photo_data, make_user_data
 
 
 class TestFKRestriction(DevdataTestBase):

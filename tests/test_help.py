@@ -1,4 +1,4 @@
-from utils import assert_ran_successfully, run_command
+from test_infrastructure import assert_ran_successfully, run_command
 
 
 def test_export_help():

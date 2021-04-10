@@ -6,9 +6,10 @@ from typing import Any, Dict, Iterable, Set
 import pytest
 from django.core import serializers
 from django.db import connections, transaction
-from utils import assert_ran_successfully, run_command
 
 from devdata.utils import to_app_model_label, to_model
+
+from .utils import assert_ran_successfully, run_command
 
 TestObject = Dict[str, Any]
 

@@ -1,5 +1,5 @@
-from base import DevdataTestBase
 from polls.models import Choice, Question
+from test_infrastructure import DevdataTestBase
 
 
 class TestPollsBasic(DevdataTestBase):
