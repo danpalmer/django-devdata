@@ -58,7 +58,11 @@ WSGI_APPLICATION = "testsite.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": "devdatatestdb",
+        # We need the same database name in both normal running from `manage.py`
+        # and pytest-django's test environment. This means we call the database
+        # "devdata" here, but it's "test_devdata" in pytest, and we override the
+        # environment to set "test_devdata" when calling from tests.
+        "NAME": os.environ.get("TEST_DATABASE_NAME", "devdata"),
     }
 }
 

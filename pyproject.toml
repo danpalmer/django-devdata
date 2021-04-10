@@ -45,3 +45,9 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 80
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "testsite.settings"
+django_find_project = false
+python_paths = ["tests/testsite"]
+addopts = ["--no-migrations"]
