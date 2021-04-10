@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "devdata",
     "polls",
+    "photofeed",
 ]
 
 MIDDLEWARE = [
