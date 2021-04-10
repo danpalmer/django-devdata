@@ -1,0 +1,11 @@
+{
+    "python.formatting.provider": "black",
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/tests",
+        "${workspaceFolder}/tests/testsite",
+    ],
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/tests",
+        "${workspaceFolder}/tests/testsite",
+    ]
+}
