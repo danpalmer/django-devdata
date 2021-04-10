@@ -2,15 +2,13 @@ import contextlib
 import functools
 import itertools
 import json
-import pathlib
 from typing import Iterator, Optional, Tuple, TypeVar
 
+import django
 import tqdm
 from django.apps import apps
 from django.conf import settings as django_settings
 from django.db.models import Model
-
-from .settings import settings
 
 
 @functools.lru_cache(maxsize=1024)
@@ -170,3 +168,10 @@ def disable_migrations():
     django_settings.MIGRATION_MODULES = DisableMigrations()
     yield
     django_settings.MIGRATION_MODULES = original_migration_modules
+
+
+def nodb_cursor(connection):
+    if django.VERSION < (3, 1):
+        return connection._nodb_connection.cursor()
+    else:
+        return connection._nodb_cursor()

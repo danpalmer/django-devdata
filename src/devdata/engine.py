@@ -11,6 +11,7 @@ from .utils import (
     disable_migrations,
     get_all_models,
     migrations_file_path,
+    nodb_cursor,
     progress,
     sort_model_strategies,
     to_app_model_label,
@@ -108,7 +109,7 @@ def import_schema(django_dbname):
 
     connection = connections[django_dbname]
 
-    with connection._nodb_connection.cursor() as cursor:
+    with nodb_cursor(connection) as cursor:
         cursor.execute("DROP DATABASE IF EXISTS {}".format(pg_dbname))
 
         creator = connection.creation
