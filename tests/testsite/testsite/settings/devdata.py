@@ -60,10 +60,10 @@ DEVDATA_STRATEGIES = {
         ),
     ],
     "photofeed.View": [
-        RandomSampleQuerySetStrategy(name="latest", count=2),
+        RandomSampleQuerySetStrategy(name="random", count=2),
     ],
     "auth.User": [
         InternalUsersStrategy(name="internal"),
-        ExactQuerySetStrategy(name="test_users", pks=(100, 101, 102)),
+        ExactQuerySetStrategy(name="test_users", pks=(202,)),
     ],
 }

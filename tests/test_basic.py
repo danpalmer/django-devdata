@@ -1,4 +1,5 @@
 from base import DevdataTestBase
+from polls.models import Choice, Question
 
 
 class TestPollsBasic(DevdataTestBase):
@@ -6,6 +7,7 @@ class TestPollsBasic(DevdataTestBase):
         return [
             {
                 "model": "polls.Question",
+                "strategy": "default",
                 "pk": 101,
                 "fields": {
                     "question_text": "Test 1",
@@ -14,6 +16,7 @@ class TestPollsBasic(DevdataTestBase):
             },
             {
                 "model": "polls.Choice",
+                "strategy": "default",
                 "pk": 101,
                 "fields": {
                     "question": 101,
@@ -23,6 +26,7 @@ class TestPollsBasic(DevdataTestBase):
             },
             {
                 "model": "polls.Choice",
+                "strategy": "default",
                 "pk": 102,
                 "fields": {
                     "question": 101,
@@ -32,6 +36,7 @@ class TestPollsBasic(DevdataTestBase):
             },
             {
                 "model": "polls.Question",
+                "strategy": "default",
                 "pk": 102,
                 "fields": {
                     "question_text": "Test 2",
@@ -40,6 +45,7 @@ class TestPollsBasic(DevdataTestBase):
             },
             {
                 "model": "polls.Choice",
+                "strategy": "default",
                 "pk": 103,
                 "fields": {
                     "question": 102,
@@ -58,5 +64,7 @@ class TestPollsBasic(DevdataTestBase):
         exported_choices = self.exported_pks(exported_data, "polls.Choice")
         assert orig_choices.issubset(exported_choices)
 
-    def assert_on_imported_data(self, connection):
-        pass
+    def assert_on_imported_data(self):
+        assert Question.objects.count() == 2
+        assert Choice.objects.count() == 3
+        assert Question.objects.get(pk=101).choice_set.count() == 2
