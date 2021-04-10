@@ -103,7 +103,7 @@ def export_data(django_dbname, dest, only=None, no_update=False):
             )
 
 
-def import_schema(django_dbname):
+def import_schema(src, django_dbname):
     db_conf = settings.DATABASES[django_dbname]
     pg_dbname = db_conf["NAME"]
 
@@ -133,7 +133,7 @@ def import_schema(django_dbname):
 
     call_command("createcachetable", database=django_dbname)
 
-    with migrations_file_path().open() as f:
+    with migrations_file_path(src).open() as f:
         migrations = json.load(f)
 
     with connection.cursor() as cursor:
@@ -146,7 +146,7 @@ def import_schema(django_dbname):
         )
 
 
-def import_data(django_dbname):
+def import_data(src, django_dbname):
     model_strategies = sort_model_strategies(settings.strategies)
     bar = progress(model_strategies)
     for app_model_label, strategy in bar:
@@ -154,10 +154,10 @@ def import_data(django_dbname):
         bar.set_postfix(
             {"strategy": "{} ({})".format(app_model_label, strategy.name)}
         )
-        strategy.import_data(django_dbname, model)
+        strategy.import_data(django_dbname, src, model)
 
 
-def import_cleanup(django_dbname):
+def import_cleanup(src, django_dbname):
     conn = connections[django_dbname]
     with conn.cursor() as cursor:
         for reset_sql in conn.ops.sequence_reset_sql(
