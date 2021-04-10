@@ -57,11 +57,7 @@ class Exportable:
         pass
 
     def data_file(self, dest, app_model_label):
-        return (
-            dest
-            / app_model_label
-            / "{}.json".format(self.name)
-        )
+        return dest / app_model_label / "{}.json".format(self.name)
 
     def ensure_dir_exists(self, dest, app_model_label):
         unique_key = (app_model_label, self.name)
