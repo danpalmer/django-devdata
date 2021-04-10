@@ -1,7 +1,5 @@
-import pathlib
 from typing import Set, Tuple
 
-from django.conf import settings
 from django.core import serializers
 from django.db import models
 
@@ -25,7 +23,7 @@ class Strategy:
     def __init__(self):
         pass
 
-    def import_data(self, django_dbname, model):
+    def import_data(self, django_dbname, src, model):
         """Load data into newly created database."""
         raise NotImplementedError
 
@@ -46,6 +44,7 @@ class Exportable:
     def export_data(
         self,
         django_dbname,
+        dest,
         model,
         no_update=False,
         log=lambda x: None,
@@ -174,11 +173,11 @@ class QuerySetStrategy(Exportable, Strategy):
                 stream=output,
             )
 
-    def import_data(self, django_dbname, model):
+    def import_data(self, django_dbname, src, model):
         app_model_label = to_app_model_label(model)
 
         try:
-            with self.data_file(app_model_label).open() as f:
+            with self.data_file(src, app_model_label).open() as f:
                 objects = serializers.deserialize(
                     "json", f, using=django_dbname
                 )
@@ -283,7 +282,7 @@ class FactoryStrategy(Strategy):
         super().__init__(*args, **kwargs)
         self.factories = factories
 
-    def import_data(self, django_dbname, model):
+    def import_data(self, django_dbname, src, model):
         pass
 
 
