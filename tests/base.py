@@ -5,7 +5,7 @@ from typing import Any, Dict, Iterable, Set
 
 import pytest
 from django.core import serializers
-from django.db import transaction
+from django.db import connections, transaction
 from utils import assert_ran_successfully, run_command
 
 from devdata.utils import to_app_model_label, to_model
@@ -115,10 +115,6 @@ class DevdataTestBase:
         self.assert_on_exported_data(exported_data)
 
     def test_import(self, test_data_dir, django_db_blocker):
-        # Block database access so that until we're asserting on the state at
-        # the end, nothing from pytest will be accessing it.
-        django_db_blocker.block()
-
         # Write out defaults of empty exports for everything first, not all
         # tests will use all models.
         empty_model = json.dumps([])
@@ -150,7 +146,10 @@ class DevdataTestBase:
 
         (test_data_dir / "migrations.json").write_text(empty_model)
 
-        # TODO: wait for connections to drop
+        # Ensure all database connections are closed before we attempt to import
+        # as this will need to drop the database.
+        for connection in connections.all():
+            connection.close()
 
         # Run the import
         process = run_command(
@@ -158,12 +157,11 @@ class DevdataTestBase:
             test_data_dir.name,
             "--no-input",
         )
+        assert_ran_successfully(process)
 
         # Unblock the database so that we can resume accessing it. This will be
         # a different actual database on disk at this point, as the import will
         # have recreated it. We do this before assertions so that we've
         # restored database access for later tests if needed.
-        django_db_blocker.unblock()
-
-        assert_ran_successfully(process)
-        self.assert_on_imported_data()
+        with django_db_blocker.unblock():
+            self.assert_on_imported_data()
