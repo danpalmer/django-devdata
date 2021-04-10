@@ -210,9 +210,11 @@ class ExactQuerySetStrategy(QuerySetStrategy):
         super().__init__(*args, **kwargs)
         self.pks = pks
 
-    def get_queryset(self, django_dbname, model):
+    def get_queryset(self, django_dbname, dest, model):
         return (
-            super().get_queryset(django_dbname, model).filter(pk__in=self.pks)
+            super()
+            .get_queryset(django_dbname, dest, model)
+            .filter(pk__in=self.pks)
         )
 
 
@@ -224,10 +226,10 @@ class RandomSampleQuerySetStrategy(QuerySetStrategy):
 
         self.count = count
 
-    def get_queryset(self, django_dbname, model):
+    def get_queryset(self, django_dbname, dest, model):
         return (
             super()
-            .get_queryset(django_dbname, model)
+            .get_queryset(django_dbname, dest, model)
             .order_by("?")[: self.count]
         )
 
@@ -241,8 +243,8 @@ class LatestSampleQuerySetStrategy(QuerySetStrategy):
         self.count = count
         self.order_by = order_by
 
-    def get_queryset(self, django_dbname, model):
-        qs = super().get_queryset(django_dbname, model)
+    def get_queryset(self, django_dbname, dest, model):
+        qs = super().get_queryset(django_dbname, dest, model)
         return qs.order_by(self.order_by)[: self.count]
 
 
@@ -267,8 +269,8 @@ class ModelReverseRelationshipQuerySetStrategy(QuerySetStrategy):
     def get_reverse_filter(self, model):
         raise NotImplementedError
 
-    def get_queryset(self, django_dbname, model):
-        qs = super().get_queryset(django_dbname, model)
+    def get_queryset(self, django_dbname, dest, model):
+        qs = super().get_queryset(django_dbname, dest, model)
         return qs.filter(**self.get_reverse_filter(model))
 
 
