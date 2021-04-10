@@ -4,11 +4,7 @@ import subprocess
 from django.conf import settings
 
 
-def run_command(*command, extra_env=None, **kwargs):
-    env = None
-    if extra_env is not None:
-        env = os.environ.copy()
-        env.update(extra_env)
+def run_command(*command, **kwargs):
     return subprocess.run(
         ["testsite/manage.py", *command],
         cwd="tests",
@@ -16,6 +12,9 @@ def run_command(*command, extra_env=None, **kwargs):
         stderr=subprocess.PIPE,
         env={
             **os.environ,
+            # Override the database name to that from pytest-django so that it
+            # matches, as we're running a subprocess here so it's not a part of
+            # the pytest environment.
             "TEST_DATABASE_NAME": settings.DATABASES["default"]["NAME"],
         },
         **kwargs

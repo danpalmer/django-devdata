@@ -49,8 +49,7 @@ class DevdataTestBase:
         # Run the export
         process = run_command(
             "devdata_export",
-            "test-export",
-            extra_env={"TEST_DATABASE_NAME": "test_devdata"},
+            test_data_dir.name,
         )
         assert_ran_successfully(process)
 
