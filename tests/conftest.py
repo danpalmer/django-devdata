@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture()
 def test_data_dir():
-    return Path(__file__).parent / "test-export"
+    return Path(__file__).parent / "test-data-tmp"
 
 
 @pytest.fixture(autouse=True)
