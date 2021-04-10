@@ -1,11 +1,7 @@
 import argparse
 from pathlib import Path
 
-from django.core.management.base import (
-    BaseCommand,
-    CommandError,
-    CommandParser,
-)
+from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db.utils import DEFAULT_DB_ALIAS
 
 from ...engine import export_data, export_migration_state, validate_strategies

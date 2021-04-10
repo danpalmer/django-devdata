@@ -157,9 +157,7 @@ class QuerySetStrategy(Exportable, Strategy):
         )
 
         with data_file.open("w") as output:
-            iterator, queryset_is_empty = is_empty_iterator(
-                queryset.iterator()
-            )
+            iterator, queryset_is_empty = is_empty_iterator(queryset.iterator())
             if queryset_is_empty:
                 log(
                     "Warning! '{}' exporter for {} selected no data.".format(
@@ -186,9 +184,7 @@ class QuerySetStrategy(Exportable, Strategy):
                 )
                 self.import_objects(django_dbname, model, objects)
         except Exception:
-            print(
-                "Failed to import {} ({})".format(app_model_label, self.name)
-            )
+            print("Failed to import {} ({})".format(app_model_label, self.name))
             raise
 
     def import_objects(self, django_dbname, model, objects):
