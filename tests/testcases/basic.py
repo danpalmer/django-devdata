@@ -1,21 +1,3 @@
-"""
-This file specifies the main testcases for our integration tests. These are not
-pytest tests themselves, but rather encode some setup and later assertion for
-inclusion in the integration tests.
-"""
-
-
-class DevdataTestCase:
-    def get_original_data(self):
-        raise NotImplementedError
-
-    def assert_on_exported_data(self, exported_data):
-        pass
-
-    def assert_on_imported_data(self, connection):
-        pass
-
-
 class BasicPollTest(DevdataTestCase):
     def get_original_data(self):
         return [
@@ -65,12 +47,12 @@ class BasicPollTest(DevdataTestCase):
         ]
 
     def assert_on_exported_data(self, exported_data):
-        pass
+        assert self._original_pks("polls.Question").issubset(
+            self._exported_pks(exported_data, "polls.Question")
+        )
+        assert self._original_pks("polls.Choice").issubset(
+            self._exported_pks(exported_data, "polls.Choice")
+        )
 
     def assert_on_imported_data(self, connection):
         pass
-
-
-TESTCASES = [
-    BasicPollTest(),
-]
