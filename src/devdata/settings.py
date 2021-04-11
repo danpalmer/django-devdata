@@ -21,7 +21,7 @@ class Settings:
                 try:
                     klass_path, kwargs = strategy
                     klass = import_string(klass_path)
-                    return klass(**kwargs)
+                    ret[model].append(klass(**kwargs))
                 except (ValueError, TypeError, IndexError):
                     ret[model].append(strategy)
 

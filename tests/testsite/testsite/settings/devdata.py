@@ -18,28 +18,28 @@ DEVDATA_FAKER_LOCALES = ["en_GB", "de"]
 
 DEVDATA_STRATEGIES = {
     "admin.LogEntry": [
-        QuerySetStrategy(name="default"),
+        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
     ],
     "auth.Permission": [
-        QuerySetStrategy(name="default"),
+        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
     ],
     "auth.Group_permissions": [
-        QuerySetStrategy(name="default"),
+        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
     ],
     "auth.Group": [
-        QuerySetStrategy(name="default"),
+        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
     ],
     "auth.User_groups": [
-        QuerySetStrategy(name="default"),
+        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
     ],
     "auth.User_user_permissions": [
-        QuerySetStrategy(name="default"),
+        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
     ],
     "contenttypes.ContentType": [
-        QuerySetStrategy(name="default"),
+        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
     ],
     "sessions.Session": [
-        QuerySetStrategy(name="default"),
+        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
     ],
     # Polls is a very basic import/export example.
     "polls.Question": [
