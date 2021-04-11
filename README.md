@@ -4,22 +4,66 @@
 databases seeded with anonymised production data. Have a development database
 that contains useful data, and is fast to create and keep up to date.
 
+## Elevator pitch
+
+```python
+# blog.models
+
+class Post(models.Model):
+    content = models.TextField()
+    published = models.DateTimeField()
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(User)
+    post = models.ForeignKey(Post)
+    text = models.TextField()
+
+# settings.py
+DEVDATA_STRATEGIES = {
+    'auth.User': [
+        # We want all internal users
+        InternalUsersStrategy(name='internal_users'),
+        # Get some random other users, we don't need everyone
+        RandomSampleQuerySetStrategy(name='random_users', count=10),
+    ],
+    'blog.Post': [
+        # Only the latest blog posts necessary for testing...
+        LatestSampleQuerySetStrategy(name='latest_posts', count=3, order='-published'),
+        # Except that one the weird edge case
+        ExactQuerySetStrategy(name='edge_case', pks=(42,)),
+    ],
+    'blog.Comment': [
+        # Get all the comments – devdata will automatically restrict to only
+        # those that maintain referential integrity, i.e. comments from users
+        # not selected, or on posts not selected, will be skipped.
+        QuerySetStrategy(name='all'),
+    ],
+}
+```
+
+```shell
+(prod)$ python manage.py devdata_export data
+(prod)$ tar -cf data.tar data/
+(local)$ scp prod:~/data.tar data.tar
+(local)$ tar -xf data.tar
+(local)$ python manage.py devdata_import data
+```
+
 #### Problem
 
 In the same way that development environments being close in configuration to
 production environments, it's important that the data in databases we use for
 development is a realistic representation of that in production.
 
-One option is to use a dump of a production database, but there are several
-problems with this:
+We could use a dump of a production database, but there are several problems
+with this:
 
-1. This is bad for user privacy, and therefore a security risk. It may not be
-   allowed in some organisations.
-2. It's a limiting factor once the production database is too big to fit on a
-   development computer.
-3. Processes to take a sample of data from a database need to preserve
-   referential integrity.
-4. It limits test data to the data available in production.
+1. It's bad for user privacy and a security risk. It may not be allowed in some
+   organisations.
+2. Production databases can be too big, impractical or unusable.
+3. Test data is limited to that available in production.
+4. Preserving referential integrity for a sample of data is hard.
 
 Another option is to use factories or fake data to generate the entire
 development database. This is mostly desirable, but...
@@ -45,6 +89,10 @@ development database. This is mostly desirable, but...
 - Importing exported data
 - Importing data from [`factory-boy`](https://github.com/FactoryBoy/factory_boy)
   factories
+
+In addition to this, the structure provided by `django-devdata` can be extended
+to support extraction from other data sources, to import/export Django fixtures,
+or to work with other factory libraries.
 
 Exporting, anonymising, and importing, are all configurable, and
 `django-devdata`'s base classes will help do this without much work.
@@ -170,6 +218,20 @@ DEVDATA_MODEL_ANONYMISERS = {}
 # List of locales to be used for Faker in generating anonymised data.
 DEVDATA_FAKER_LOCALES = None
 # ['en_GB', 'en_AU']
+
+# Optional
+# In many codebases, there will only be a few models that will do most of the
+# work to restrict the total export size – only taking a few users, or a few
+# comments – for many models a default behaviour of taking everything
+# following the restrictions from other models would be sufficient. This setting
+# allows for specifying a default strategy.
+# Important:
+# - When using this, no errors will be raised if a model is missed from the list
+#   of strategies.
+# - This strategy is not added to all models, and it does not override an empty
+#   list of strategies. It is only used when a model is not defined in the
+#   strategy config at all.
+DEVDATA_DEFAULT_STRATEGY = None
 ```
 
 Strategies can be defined either as a strategy instance, or a tuple of
