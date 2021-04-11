@@ -14,40 +14,49 @@ from ..custom_strategies import InternalUsersStrategy
 DEVDATA_FIELD_ANONYMISERS = {}
 DEVDATA_MODEL_ANONYMISERS = {}
 
+DEVDATA_DEFAULT_STRATEGY = QuerySetStrategy(name="default")
+
 DEVDATA_FAKER_LOCALES = ["en_GB", "de"]
 
 DEVDATA_STRATEGIES = {
-    "admin.LogEntry": [
-        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
+    ###
+    # Important: If updating behaviour here, remember to update
+    # `test_infrastructure.base.ALL_TEST_STRATEGIES` which defines which
+    # exported files are created for tests.
+    ###
+    # Admin/Groups system is left to the default, we don't use these for
+    # tests.
+    # admin.LogEntry
+    # auth.Group_permissions
+    # auth.Group
+    # auth.User_groups
+    # auth.User_user_permissions
+    ###
+    # Content Types can be slightly tricky, we need to be careful to replace any
+    # default Django provided entries with our own that have the correct PKs.
+    # Same goes for Permission.
+    "contenttypes.ContentType": [
+        (
+            "devdata.strategies.DeleteFirstQuerySetStrategy",
+            {"name": "replaced"},
+        ),
     ],
     "auth.Permission": [
-        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
+        (
+            "devdata.strategies.DeleteFirstQuerySetStrategy",
+            {"name": "replaced"},
+        ),
     ],
-    "auth.Group_permissions": [
-        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
-    ],
-    "auth.Group": [
-        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
-    ],
-    "auth.User_groups": [
-        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
-    ],
-    "auth.User_user_permissions": [
-        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
-    ],
-    "contenttypes.ContentType": [
-        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
-    ],
-    "sessions.Session": [
-        ("devdata.strategies.QuerySetStrategy", {"name": "default"}),
-    ],
-    # Polls is a very basic import/export example.
-    "polls.Question": [
-        QuerySetStrategy(name="default"),
-    ],
-    "polls.Choice": [
-        QuerySetStrategy(name="default"),
-    ],
+    ###
+    # Do not export sessions, there's little benefit to these, there may be lots
+    # of them, and they pose a security risk if not correctly anonymised.
+    "sessions.Session": [],
+    ###
+    # Polls is a very basic import/export example. We leave these to the default
+    # strategy.
+    # polls.Question
+    # polls.Choice
+    ###
     # Photofeed is used to demonstrate restricted exports and anonymising of
     # user data. In particular, we customise the users exported to restrict the
     # photos and likes exported.

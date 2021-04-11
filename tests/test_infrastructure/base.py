@@ -15,12 +15,12 @@ TestObject = Dict[str, Any]
 
 ALL_TEST_STRATEGIES = (
     ("admin.LogEntry", "default"),
-    ("auth.Permission", "default"),
+    ("auth.Permission", "replaced"),
     ("auth.Group_permissions", "default"),
     ("auth.Group", "default"),
     ("auth.User_groups", "default"),
     ("auth.User_user_permissions", "default"),
-    ("contenttypes.ContentType", "default"),
+    ("contenttypes.ContentType", "replaced"),
     ("sessions.Session", "default"),
     ("polls.Question", "default"),
     ("polls.Choice", "default"),
