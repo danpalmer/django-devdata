@@ -181,12 +181,12 @@ class QuerySetStrategy(Exportable, Strategy):
                 objects = serializers.deserialize(
                     "json", f, using=django_dbname
                 )
-                self.import_objects(django_dbname, model, objects)
+                self.import_objects(django_dbname, src, model, objects)
         except Exception:
             print("Failed to import {} ({})".format(app_model_label, self.name))
             raise
 
-    def import_objects(self, django_dbname, model, objects):
+    def import_objects(self, django_dbname, src, model, objects):
         qs = model.objects.using(django_dbname)
         existing_pks = set(qs.values_list("pk", flat=True))
         qs.bulk_create(
@@ -257,19 +257,19 @@ class ModelReverseRelationshipQuerySetStrategy(QuerySetStrategy):
     to the exporting process, where they are available to `get_queryset`.
     """
 
-    def get_reverse_filter(self, model):
+    def get_reverse_filter(self, dest, model):
         raise NotImplementedError
 
     def get_queryset(self, django_dbname, dest, model):
         qs = super().get_queryset(django_dbname, dest, model)
-        return qs.filter(**self.get_reverse_filter(model))
+        return qs.filter(**self.get_reverse_filter(dest, model))
 
 
 class DeleteFirstQuerySetStrategy(QuerySetStrategy):
-    def import_objects(self, django_dbname, model, objects):
+    def import_objects(self, django_dbname, src, model, objects):
         qs = model.objects.using(django_dbname)
         qs.all().delete()
-        super().import_objects(django_dbname, model, objects)
+        super().import_objects(django_dbname, src, model, objects)
 
 
 class FactoryStrategy(Strategy):
