@@ -43,11 +43,11 @@ DEVDATA_STRATEGIES = {
 ```
 
 ```shell
-(prod)$ python manage.py devdata_export data
-(prod)$ tar -cf data.tar data/
-(local)$ scp prod:~/data.tar data.tar
-(local)$ tar -xf data.tar
-(local)$ python manage.py devdata_import data
+(prod)$ python manage.py devdata_export devdata
+(prod)$ tar -czf devdata.tar devdata/
+(local)$ scp prod:~/devdata.tar devdata.tar.gz
+(local)$ tar -xzf devdata.tar.gz
+(local)$ python manage.py devdata_import devdata/
 ```
 
 #### Problem
