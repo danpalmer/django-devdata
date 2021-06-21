@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "devdata",
     "polls",
     "photofeed",
+    "turtles",
 ]
 
 MIDDLEWARE = [

@@ -27,6 +27,8 @@ ALL_TEST_STRATEGIES = (
     ("photofeed.Photo", "default"),
     ("photofeed.Like", "latest"),
     ("photofeed.View", "random"),
+    ("turtles.Turtle", "default"),
+    ("turtles.World", "default"),
     ("auth.User", "internal"),
     ("auth.User", "test_users"),
 )
