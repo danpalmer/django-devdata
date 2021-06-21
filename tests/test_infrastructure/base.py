@@ -80,7 +80,10 @@ class DevdataTestBase:
 
         for obj in objects:
             for field, model in fk_fields:
-                if obj["fields"][field] in lookup[model]:
+                if (
+                    obj["fields"][field] is None
+                    or obj["fields"][field] in lookup[model]
+                ):
                     yield obj
 
     # Test structure
