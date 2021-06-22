@@ -27,6 +27,8 @@ ALL_TEST_STRATEGIES = (
     ("photofeed.Photo", "default"),
     ("photofeed.Like", "latest"),
     ("photofeed.View", "random"),
+    ("turtles.Turtle", "default"),
+    ("turtles.World", "default"),
     ("auth.User", "internal"),
     ("auth.User", "test_users"),
 )
@@ -80,7 +82,10 @@ class DevdataTestBase:
 
         for obj in objects:
             for field, model in fk_fields:
-                if obj["fields"][field] in lookup[model]:
+                if (
+                    obj["fields"][field] is None
+                    or obj["fields"][field] in lookup[model]
+                ):
                     yield obj
 
     # Test structure

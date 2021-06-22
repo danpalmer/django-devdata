@@ -90,6 +90,9 @@ class QuerySetStrategy(Exportable, Strategy):
             if not field.related_model:
                 continue
 
+            if field.related_model == model:
+                continue
+
             app_model_label = to_app_model_label(field.related_model)
             restricted_pks[app_model_label] = get_exported_pks_for_model(
                 dest,
@@ -114,7 +117,6 @@ class QuerySetStrategy(Exportable, Strategy):
                 x
                 for x in model._meta.fields
                 if x.related_model == restrict_model
-                if x.related_model != model
             ]
 
             queryset = queryset.filter(
