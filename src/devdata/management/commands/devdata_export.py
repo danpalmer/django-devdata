@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db.utils import DEFAULT_DB_ALIAS
 
@@ -35,6 +36,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *, dest, only=None, database, no_update, **options):
+        try:
+            for app_model_label in only:
+                apps.get_model(app_model_label, require_ready=False)
+        except LookupError as e:
+            raise CommandError(e) from e
+
         try:
             validate_strategies(only)
         except AssertionError as e:
