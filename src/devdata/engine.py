@@ -80,14 +80,10 @@ def export_data(django_dbname, dest, only=None, no_update=False):
             {"strategy": "{} ({})".format(app_model_label, strategy.name)}
         )
 
-        if (
-            app_model_label
-            in (
-                "contenttypes.ContentTypes",
-                "auth.Permissions",
-            )
-            and not isinstance(strategy, DeleteFirstQuerySetStrategy)
-        ):
+        if app_model_label in (
+            "contenttypes.ContentTypes",
+            "auth.Permissions",
+        ) and not isinstance(strategy, DeleteFirstQuerySetStrategy):
             bar.write(
                 "Warning! Django auto-creates entries in {} which means there "
                 "may be conflicts on import. It's recommended that strategies "

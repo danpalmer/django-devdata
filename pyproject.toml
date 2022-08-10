@@ -11,16 +11,15 @@ packages = [
     { include = "devdata", from = "src" },
 ]
 
-# TODO(dist): Set Python version dependency once we don't need to support 3.5
 [tool.poetry.dependencies]
-# python = ">=3.6.1"
+python = ">=3.7"
 tqdm = ">=4.0.0"
 Faker = ">=5.0.0"
 
 [tool.poetry.dev-dependencies]
-black = "^20.8b1"
-flake8 = "^3.8.4"
-flake8-black = "^0.2.1"
+black = "^22.6.0"
+flake8 = "^5.0.4"
+flake8-black = "^0.3.3"
 flake8-github-actions = "^0.1.0"
 pytest = "^6.2.2"
 pytest-django = "^4.1.0"
