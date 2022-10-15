@@ -10,6 +10,15 @@ DEFAULT_MODEL_ANONYMISERS = {}
 DEFAULT_FAKER_LOCALES = ["en_US"]
 
 
+def import_strategy(strategy):
+    try:
+        klass_path, kwargs = strategy
+        klass = import_string(klass_path)
+        return klass(**kwargs)
+    except (ValueError, TypeError, IndexError):
+        return strategy
+
+
 class Settings:
     @property
     def strategies(self):
@@ -36,12 +45,9 @@ class Settings:
                     ret[app_model_label] = [default_strategy]
             else:
                 for strategy in strategies:
-                    try:
-                        klass_path, kwargs = strategy
-                        klass = import_string(klass_path)
-                        ret[app_model_label].append(klass(**kwargs))
-                    except (ValueError, TypeError, IndexError):
-                        ret[app_model_label].append(strategy)
+                    ret[app_model_label].append(
+                        import_strategy(strategy),
+                    )
 
         return ret
 
