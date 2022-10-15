@@ -52,6 +52,13 @@ class Settings:
         return ret
 
     @property
+    def extra_strategies(self):
+        return [
+            import_strategy(x)
+            for x in getattr(django_settings, "DEVDATA_EXTRA_STRATEGIES", ())
+        ]
+
+    @property
     def field_anonymisers(self):
         return getattr(
             django_settings,

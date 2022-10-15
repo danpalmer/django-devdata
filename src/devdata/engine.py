@@ -5,6 +5,7 @@ from django.core.management.color import no_style
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections
 
+from .extras import ExtraExport
 from .settings import settings
 from .strategies import DeleteFirstQuerySetStrategy, Exportable
 from .utils import (
@@ -99,6 +100,20 @@ def export_data(django_dbname, dest, only=None, no_update=False):
             )
 
 
+def export_extras(django_dbname, dest, no_update=False):
+    bar = progress(settings.extra_strategies)
+    for strategy in bar:
+        bar.set_postfix({"extra": strategy.name})
+
+        if isinstance(strategy, ExtraExport):
+            strategy.export_data(
+                django_dbname,
+                dest,
+                no_update,
+                log=bar.write,
+            )
+
+
 def import_schema(src, django_dbname):
     db_conf = settings.DATABASES[django_dbname]
     pg_dbname = db_conf["NAME"]
@@ -151,6 +166,13 @@ def import_data(src, django_dbname):
             {"strategy": "{} ({})".format(app_model_label, strategy.name)}
         )
         strategy.import_data(django_dbname, src, model)
+
+
+def import_extras(src, django_dbname):
+    bar = progress(settings.extra_strategies)
+    for strategy in bar:
+        bar.set_postfix({"extra": strategy.name})
+        strategy.import_data(django_dbname, src)
 
 
 def import_cleanup(src, django_dbname):

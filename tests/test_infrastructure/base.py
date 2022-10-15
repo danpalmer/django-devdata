@@ -92,11 +92,12 @@ class DevdataTestBase:
                     exported_data["migrations"] = json.load(f)
             else:
                 exported_data[child.name] = {}
-                for strategy_file in child.iterdir():
-                    with strategy_file.open() as f:
-                        exported_data[child.name][
-                            strategy_file.stem
-                        ] = json.load(f)
+                if child.is_dir():
+                    for strategy_file in child.iterdir():
+                        with strategy_file.open() as f:
+                            exported_data[child.name][
+                                strategy_file.stem
+                            ] = json.load(f)
 
         self.assert_on_exported_data(exported_data)
 

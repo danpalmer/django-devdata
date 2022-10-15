@@ -5,7 +5,12 @@ from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError, CommandParser
 from django.db.utils import DEFAULT_DB_ALIAS
 
-from ...engine import export_data, export_migration_state, validate_strategies
+from ...engine import (
+    export_data,
+    export_migration_state,
+    export_extras,
+    validate_strategies,
+)
 
 
 class Command(BaseCommand):
@@ -51,3 +56,4 @@ class Command(BaseCommand):
 
         export_migration_state(database, dest_dir)
         export_data(database, dest_dir, only, no_update)
+        export_extras(database, dest_dir)
