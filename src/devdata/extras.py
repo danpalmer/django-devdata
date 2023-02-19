@@ -25,7 +25,7 @@ class ExtraImport:
 
 class ExtraExport:
     """
-    Base extra defining how to get data out of an existing .
+    Base extra defining how to get data out of an existing database.
     """
 
     seen_names = set()  # type: Set[Tuple[str, str]]
