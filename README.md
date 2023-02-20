@@ -151,6 +151,26 @@ In our experience most models can be exported with just the un-customised
 `QuerySetStrategy`, some will need to use other pre-provided strategies, and
 a small number will need custom exporters based on the classes provided.
 
+##### Extra Strategies
+
+Sometimes it can be useful to export and import data from the database which
+lives outside the tables which Django manages via models.
+
+The "extra" strategies provide hooks which support transferring these data.
+
+Classes are provided to inherit from for customising this behaviour:
+
+- `ExtraExport` – defines how to get data out of the database.
+- `ExtraImport` – defines how to get data into a database.
+
+The API necessary for classes to implement is small and reminiscent of those for
+`Strategy` and `Exportable`.
+
+The following "extra" strategies are provided out of the box:
+
+- `PostgresSequences` – transfers data about Postgres sequences which are not
+  attached to tables.
+
 #### Anonymisers
 
 Anonymisers are configured by field name, and by model and field name.
@@ -201,6 +221,14 @@ django-devdata default settings, with documentation on usage.
 # A mapping of app model label to list of strategies to be used.
 DEVDATA_STRATEGIES = ...
 # {'auth.User': [QuerySetStrategy(name='all')], 'sessions.Session': []}
+
+# Optional
+# A list of strategies for transferring data about a database which are not
+# captured in the tables themselves.
+DEVDATA_EXTRA_STRATEGIES = ...
+# [
+#   ('devdata.extras.PostgresSequences', {}),
+# ]
 
 # Optional
 # A mapping of field name to an anonymiser to be used for all fields with that
