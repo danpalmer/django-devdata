@@ -6,6 +6,7 @@ from typing import Any, Dict, Iterable, Set
 import pytest
 from django.core import serializers
 from django.db import connections, transaction
+from django.db.migrations.recorder import MigrationRecorder
 
 from devdata.utils import to_app_model_label, to_model
 
@@ -71,6 +72,9 @@ class DevdataTestBase:
     # Test structure
 
     def test_export(self, test_data_dir):
+        for connection in connections.all():
+            MigrationRecorder(connection).ensure_schema()
+
         with transaction.atomic():
             data = json.dumps(self.get_original_data())
             objects = serializers.deserialize("json", data)
@@ -127,6 +131,20 @@ class DevdataTestBase:
                         list(self._filter_exported(exported_pks, objects))
                     )
                 )
+
+        # Ensure we have migrations history to import to validate that the
+        # import of such data actually works.
+        (test_data_dir / "migrations.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "app": "auth",
+                        "name": "0001_initial",
+                        "applied": "2023-01-01T12:00:00.000Z",
+                    },
+                ],
+            ),
+        )
 
         # Ensure all database connections are closed before we attempt to import
         # as this will need to drop the database.

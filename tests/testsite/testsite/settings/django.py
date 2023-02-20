@@ -67,6 +67,8 @@ DATABASES = {
     }
 }
 
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
 # Overrides for CI/testing. Not used by default because local development
 # doesn't typically need these.
 
