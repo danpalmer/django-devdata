@@ -49,6 +49,35 @@ class TestPostgresSequences:
 
         assert exported_data == [self.SAMPLE_DATA]
 
+    def test_export_unused_sequence(self, test_data_dir, cleanup_database):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE SEQUENCE foo
+                AS bigint
+                INCREMENT BY 4
+                MINVALUE 6
+                """,
+            )
+
+        # Run the export
+        process = run_command(
+            "devdata_export",
+            test_data_dir.name,
+        )
+        assert_ran_successfully(process)
+
+        # Read in the exported data
+        exported_data = json.loads(
+            (test_data_dir / "postgres-sequences.json").read_text(),
+        )
+
+        expected_data = {
+            **self.SAMPLE_DATA,
+            "last_value": 6,
+        }
+        assert exported_data == [expected_data]
+
     def test_import(self, test_data_dir, default_export_data, cleanup_database):
         test_data_dir.mkdir(parents=True, exist_ok=True)
         (test_data_dir / "postgres-sequences.json").write_text(
