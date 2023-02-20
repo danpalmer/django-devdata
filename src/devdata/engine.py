@@ -4,6 +4,7 @@ from django.core.management import call_command
 from django.core.management.color import no_style
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections
+from django.db.migrations.recorder import MigrationRecorder
 
 from .settings import settings
 from .strategies import DeleteFirstQuerySetStrategy, Exportable
@@ -131,6 +132,13 @@ def import_schema(src, django_dbname):
 
     with migrations_file_path(src).open() as f:
         migrations = json.load(f)
+
+    if migrations:
+        # Django 4+ doesn't create `django_migrations` table when it detects
+        # there aren't any migrations to run (including when using `run_syncdb`
+        # as we do above). However since we do actually have data to import we
+        # need to force the creation of the table.
+        MigrationRecorder(connection).ensure_schema()
 
     with connection.cursor() as cursor:
         cursor.executemany(
