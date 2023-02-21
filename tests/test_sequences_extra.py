@@ -2,6 +2,7 @@ import json
 
 import pytest
 from django.db import connection, connections
+from django.db.migrations.recorder import MigrationRecorder
 from test_infrastructure import assert_ran_successfully, run_command
 
 
@@ -20,6 +21,9 @@ class TestPostgresSequences:
     }
 
     def test_export(self, test_data_dir, cleanup_database):
+        for conn in connections.all():
+            MigrationRecorder(conn).ensure_schema()
+
         with connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -50,6 +54,9 @@ class TestPostgresSequences:
         assert exported_data == [self.SAMPLE_DATA]
 
     def test_export_unused_sequence(self, test_data_dir, cleanup_database):
+        for conn in connections.all():
+            MigrationRecorder(conn).ensure_schema()
+
         with connection.cursor() as cursor:
             cursor.execute(
                 """
