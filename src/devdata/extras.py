@@ -1,0 +1,185 @@
+import json
+import textwrap
+from pathlib import Path
+from typing import Callable, Dict, Set, Tuple
+
+from django.db import connections
+
+Logger = Callable[[object], None]
+
+
+class ExtraImport:
+    """
+    Base extra defining how to get data into a fresh database.
+    """
+
+    depends_on = ()  # type: Tuple[str, ...]
+
+    def __init__(self) -> None:
+        pass
+
+    def import_data(self, django_dbname: str, src: Path) -> None:
+        """Load data into newly created database."""
+        raise NotImplementedError
+
+
+class ExtraExport:
+    """
+    Base extra defining how to get data out of an existing database.
+    """
+
+    seen_names = set()  # type: Set[Tuple[str, str]]
+
+    def __init__(self, *args, name, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.name = name
+
+    def export_data(
+        self,
+        django_dbname: str,
+        dest: Path,
+        no_update: bool = False,
+        log: Logger = lambda x: None,
+    ) -> None:
+        """
+        Export the data to a directory on disk. `no_update` indicates not to
+        update if there is any data already existing locally.
+        """
+        pass
+
+    def data_file(self, dest: Path) -> Path:
+        return dest / f"{self.name}.json"
+
+    def ensure_dir_exists(self, dest: Path) -> None:
+        unique_key = self.name
+        if unique_key in self.seen_names:
+            raise ValueError(
+                "Exportable strategy names must be unique per model so that "
+                "exports do not collide.",
+            )
+        self.seen_names.add(unique_key)
+
+        dest.mkdir(parents=True, exist_ok=True)
+
+
+class PostgresSequences(ExtraExport, ExtraImport):
+    def __init__(self, *args, name="postgres-sequences", **kwargs):
+        super().__init__(*args, name=name, **kwargs)
+
+    def export_data(
+        self,
+        django_dbname: str,
+        dest: Path,
+        no_update: bool = False,
+        log: Logger = lambda x: None,
+    ) -> None:
+        data_file = self.data_file(dest)
+
+        if no_update and data_file.exists():
+            return
+
+        columns = (
+            "sequencename",
+            "data_type",
+            "start_value",
+            "min_value",
+            "max_value",
+            "increment_by",
+            "cycle",
+            "cache_size",
+            "last_value",
+        )
+
+        with connections[django_dbname].cursor() as cursor:
+            cursor.execute(
+                """
+                    SELECT
+                        {columns}
+                    FROM
+                        pg_sequences
+                    WHERE
+                        sequencename NOT IN (
+                            SELECT
+                                seq.relname
+                            FROM
+                                pg_class AS seq
+                            LEFT JOIN
+                                pg_depend
+                            ON
+                                seq.relfilenode = pg_depend.objid
+                            JOIN
+                                pg_attribute AS attr
+                            ON
+                                attr.attnum = pg_depend.refobjsubid
+                                AND attr.attrelid = pg_depend.refobjid
+                            WHERE
+                                seq.relkind = 'S'
+                        );
+                """.format(
+                    columns=", ".join(columns),
+                ),
+            )
+            sequences_state = [
+                dict(zip(columns, row)) for row in cursor.fetchall()
+            ]
+
+            # Cope with the 'last_value' having not been populated in this
+            # session. The following query is (I think) only supported in
+            # Postgres 11.2+, however since Postgres 10 is about to be EOL
+            # (November 2022) it doesn't seem worth the effort to support older
+            # versions.
+            for sequence_state in sequences_state:
+                if sequence_state["last_value"] is None:
+                    name = sequence_state["sequencename"]
+                    cursor.execute(f"SELECT last_value FROM {name}")
+                    (sequence_state["last_value"],) = cursor.fetchone()
+
+        with data_file.open("w") as f:
+            json.dump(sequences_state, f, indent=4)
+
+    def import_data(self, django_dbname: str, src: Path) -> None:
+        with self.data_file(src).open() as f:
+            sequences = json.load(f)
+
+        def check_simple_value(mapping: Dict[str, str], *, key: str) -> str:
+            value = mapping[key]
+            if not value.replace("_", "").isalnum():
+                raise ValueError(f"{key} is not alphanumeric")
+            return value
+
+        with connections[django_dbname].cursor() as cursor:
+            for sequence in sequences:
+                # Sequence name & data type need to be inline (i.e: can't be
+                # passed as data), so provide some safety here.
+                name = check_simple_value(sequence, key="sequencename")
+                data_type = check_simple_value(sequence, key="data_type")
+
+                query = textwrap.dedent(
+                    f"""
+                    CREATE SEQUENCE {name}
+                    AS {data_type}
+                    INCREMENT BY %s
+                    MINVALUE %s
+                    MAXVALUE %s
+                    START %s
+                    CACHE %s
+                """
+                )
+                params = [
+                    sequence["increment_by"],
+                    sequence["min_value"],
+                    sequence["max_value"],
+                    sequence["last_value"],
+                    sequence["cache_size"],
+                ]
+
+                if sequence["cycle"]:
+                    query += "CYCLE "
+                else:
+                    query += "NO CYCLE "
+
+                cursor.execute(query, params)
+
+                # Move on from the last value (which has already been used)
+                cursor.execute("SELECT nextval(%s)", [name])

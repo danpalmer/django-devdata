@@ -14,26 +14,6 @@ from .utils import assert_ran_successfully, run_command
 
 TestObject = Dict[str, Any]
 
-ALL_TEST_STRATEGIES = (
-    ("admin.LogEntry", "default"),
-    ("auth.Permission", "replaced"),
-    ("auth.Group_permissions", "default"),
-    ("auth.Group", "default"),
-    ("auth.User_groups", "default"),
-    ("auth.User_user_permissions", "default"),
-    ("contenttypes.ContentType", "replaced"),
-    ("sessions.Session", "default"),
-    ("polls.Question", "default"),
-    ("polls.Choice", "default"),
-    ("photofeed.Photo", "default"),
-    ("photofeed.Like", "latest"),
-    ("photofeed.View", "random"),
-    ("turtles.Turtle", "default"),
-    ("turtles.World", "default"),
-    ("auth.User", "internal"),
-    ("auth.User", "test_users"),
-)
-
 
 @pytest.mark.django_db(transaction=True)
 class DevdataTestBase:
@@ -116,23 +96,21 @@ class DevdataTestBase:
                     exported_data["migrations"] = json.load(f)
             else:
                 exported_data[child.name] = {}
-                for strategy_file in child.iterdir():
-                    with strategy_file.open() as f:
-                        exported_data[child.name][
-                            strategy_file.stem
-                        ] = json.load(f)
+                if child.is_dir():
+                    for strategy_file in child.iterdir():
+                        with strategy_file.open() as f:
+                            exported_data[child.name][
+                                strategy_file.stem
+                            ] = json.load(f)
 
         self.assert_on_exported_data(exported_data)
 
-    def test_import(self, test_data_dir, django_db_blocker):
-        # Write out defaults of empty exports for everything first, not all
-        # tests will use all models.
-        empty_model = json.dumps([])
-        for model, strategy in ALL_TEST_STRATEGIES:
-            path = test_data_dir / model / f"{strategy}.json"
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(empty_model)
-
+    def test_import(
+        self,
+        test_data_dir,
+        default_export_data,
+        django_db_blocker,
+    ):
         # Write out data to the filesystem as if it had been exported
         data = collections.defaultdict(
             lambda: collections.defaultdict(list)

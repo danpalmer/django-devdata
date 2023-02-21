@@ -9,6 +9,7 @@ from ...engine import (
     import_cleanup,
     import_data,
     import_schema,
+    import_extras,
     validate_strategies,
 )
 from ...settings import settings
@@ -58,4 +59,5 @@ class Command(BaseCommand):
 
         import_schema(src, database)
         import_data(src, database)
+        import_extras(src, database)
         import_cleanup(src, database)

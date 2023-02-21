@@ -76,3 +76,7 @@ DEVDATA_STRATEGIES = {
         ExactQuerySetStrategy(name="test_users", pks=(102,)),
     ],
 }
+
+DEVDATA_EXTRA_STRATEGIES = [
+    ("devdata.extras.PostgresSequences", {}),
+]
