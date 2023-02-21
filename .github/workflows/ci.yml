@@ -12,16 +12,8 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.7", "3.8", "3.9", "3.10"]
-        django-version: ["2.2", "3.0", "3.1", "3.2", "4.0", "4.1"]
+        django-version: ["3.2", "4.0", "4.1"]
         exclude:
-          # Python 3.10 is not supported until Django 3.2
-          - python-version: "3.10"
-            django-version: "2.2"
-          - python-version: "3.10"
-            django-version: "3.0"
-          - python-version: "3.10"
-            django-version: "3.1"
-
           # Python 3.7 is not supported beyond Django 3.2
           - python-version: "3.7"
             django-version: "4.0"
