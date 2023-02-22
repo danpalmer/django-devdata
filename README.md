@@ -5,7 +5,7 @@ databases seeded with anonymised production data. Have a development database
 that contains useful data, and is fast to create and keep up to date.
 
 As of 1.x, `django-devdata` is ready for use in real-world projects. See
-[CHANGELOG.md](CHANGELOG.md) for more details.
+releases for more details.
 
 ## Elevator pitch
 
