@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "django-devdata"
 version = "1.0.0"
-description = ""
+description = "Django tooling for creating development databases seeded with anonymised production data."
 authors = ["Dan Palmer <dan@danpalmer.me>"]
 license = "MIT"
 readme = "README.md"
