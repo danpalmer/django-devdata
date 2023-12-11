@@ -12,7 +12,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.7"
+python = ">=3.8"
 tqdm = ">=4.0.0"
 Faker = ">=5.0.0"
 
