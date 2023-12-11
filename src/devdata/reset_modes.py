@@ -40,6 +40,13 @@ class Reset(abc.ABC):
 
 
 class DropDatabaseReset(Reset):
+    """
+    Drop the entire database and re-create it using Django's test utils.
+
+    This is suitable in cases where Django is configured with a database
+    superuser account, which is likely to be the case in local development.
+    """
+
     slug = "drop-database"
 
     description_for_confirmation = "delete the database"
@@ -64,6 +71,20 @@ class DropDatabaseReset(Reset):
 
 
 class DropTablesReset(Reset):
+    """
+    Drop all the tables which Django knows about.
+
+    This is suitable in cases where the current state of the database can be
+    assumed to be similar enough to the new state that removing the tables alone
+    is sufficient to clear out the data. For databases which support other forms
+    of data (e.g: Postgres sequences decoupled from tables) this mode will not
+    touch those data and the user must ensure they are handled suitably.
+
+    This is expected to be useful in cases where Django is configured with
+    administrative privileges within a database, but may not have access to drop
+    the entire database.
+    """
+
     slug = "drop-tables"
 
     description_for_confirmation = "delete all tables in the database"
@@ -82,6 +103,15 @@ class DropTablesReset(Reset):
 
 
 class NoReset(Reset):
+    """
+    Perform no resetting against the database.
+
+    This is suitable in cases where the user has already manually configured the
+    target database or otherwise wants more control over the setup. The user is
+    responsible for ensuring that the database is in a state ready to have the
+    schema migrated into it.
+    """
+
     slug = "none"
 
     requires_confirmation = False
