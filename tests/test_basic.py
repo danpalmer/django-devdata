@@ -65,6 +65,8 @@ class TestPollsBasic(DevdataTestBase):
         assert orig_choices.issubset(exported_choices)
 
     def assert_on_imported_data(self):
-        assert Question.objects.count() == 2
+        assert sorted(
+            Question.objects.values_list("question_text", flat=True)
+        ) == ["Test 1", "Test 2"]
         assert Choice.objects.count() == 3
         assert Question.objects.get(pk=101).choice_set.count() == 2
