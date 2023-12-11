@@ -12,6 +12,7 @@ from ...engine import (
     import_extras,
     validate_strategies,
 )
+from ...reset_modes import MODES
 from ...settings import settings
 
 
@@ -31,12 +32,19 @@ class Command(BaseCommand):
             default=DEFAULT_DB_ALIAS,
         )
         parser.add_argument(
+            "--reset-mode",
+            choices=MODES.values(),
+            type=MODES.__getitem__,
+            help="How to ensure the database is empty before importing the new schema (default: %(default)s).",
+            default=MODES["drop"].slug,
+        )
+        parser.add_argument(
             "--no-input",
             help="Disable confirmations before danger actions.",
             action="store_true",
         )
 
-    def handle(self, src, database, no_input=False, **options):
+    def handle(self, src, database, reset_mode, no_input=False, **options):
         try:
             validate_strategies()
         except AssertionError as e:
@@ -44,8 +52,9 @@ class Command(BaseCommand):
 
         if not no_input and (
             input(
-                "You're about to delete the database {} ({}) from the host {}. "
+                "You're about to {} {} ({}) from the host {}. "
                 "Are you sure you want to continue? [y/N]: ".format(
+                    reset_mode.description_for_confirmation,
                     self.style.WARNING(database),
                     self.style.WARNING(settings.DATABASES[database]["NAME"]),
                     self.style.WARNING(socket.gethostname()),
@@ -54,6 +63,8 @@ class Command(BaseCommand):
             != "y"
         ):
             raise CommandError("Aborted")
+
+        reset_mode.reset_database(database)
 
         src = (Path.cwd() / src).absolute()
 
