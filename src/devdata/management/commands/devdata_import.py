@@ -50,17 +50,23 @@ class Command(BaseCommand):
         except AssertionError as e:
             raise CommandError(e)
 
-        if not no_input and (
-            input(
-                "You're about to {} {} ({}) from the host {}. "
-                "Are you sure you want to continue? [y/N]: ".format(
-                    reset_mode.description_for_confirmation,
-                    self.style.WARNING(database),
-                    self.style.WARNING(settings.DATABASES[database]["NAME"]),
-                    self.style.WARNING(socket.gethostname()),
-                ),
-            ).lower()
-            != "y"
+        if (
+            not no_input
+            and reset_mode.requires_confirmation
+            and (
+                input(
+                    "You're about to {} {} ({}) from the host {}. "
+                    "Are you sure you want to continue? [y/N]: ".format(
+                        reset_mode.description_for_confirmation,
+                        self.style.WARNING(database),
+                        self.style.WARNING(
+                            settings.DATABASES[database]["NAME"]
+                        ),
+                        self.style.WARNING(socket.gethostname()),
+                    ),
+                ).lower()
+                != "y"
+            )
         ):
             raise CommandError("Aborted")
 

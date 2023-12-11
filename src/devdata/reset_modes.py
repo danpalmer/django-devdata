@@ -23,6 +23,10 @@ class Reset(abc.ABC):
         raise NotImplementedError
 
     @property
+    def requires_confirmation(self) -> bool:
+        return True
+
+    @property
     @abc.abstractclassmethod
     def description_for_confirmation(self) -> str:
         raise NotImplementedError
@@ -57,3 +61,14 @@ class DropDatabaseReset(Reset):
                     "suffix": creator.sql_table_creation_suffix(),
                 },
             )
+
+
+class NoReset(Reset):
+    slug = "none"
+
+    requires_confirmation = False
+
+    description_for_confirmation = ""
+
+    def reset_database(self, django_dbname: str) -> None:
+        pass
