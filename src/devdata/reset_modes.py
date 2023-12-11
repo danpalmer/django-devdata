@@ -40,7 +40,7 @@ class Reset(abc.ABC):
 
 
 class DropDatabaseReset(Reset):
-    slug = "drop"
+    slug = "drop-database"
 
     description_for_confirmation = "delete the database"
 
@@ -61,6 +61,24 @@ class DropDatabaseReset(Reset):
                     "suffix": creator.sql_table_creation_suffix(),
                 },
             )
+
+
+class DropTablesReset(Reset):
+    slug = "drop-tables"
+
+    description_for_confirmation = "delete all tables in the database"
+
+    def reset_database(self, django_dbname: str) -> None:
+        connection = connections[django_dbname]
+
+        with connection.cursor() as cursor:
+            table_infos = connection.introspection.get_table_list(cursor)
+            models = connection.introspection.installed_models(
+                [x.name for x in table_infos],
+            )
+            with connection.schema_editor() as editor:
+                for model in models:
+                    editor.delete_model(model)
 
 
 class NoReset(Reset):
