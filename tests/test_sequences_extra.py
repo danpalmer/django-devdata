@@ -5,6 +5,8 @@ from django.db import connection, connections
 from django.db.migrations.recorder import MigrationRecorder
 from test_infrastructure import assert_ran_successfully, run_command
 
+from devdata.reset_modes import MODES
+
 
 @pytest.mark.django_db(transaction=True)
 class TestPostgresSequences:
@@ -85,7 +87,14 @@ class TestPostgresSequences:
         }
         assert exported_data == [expected_data]
 
-    def test_import(self, test_data_dir, default_export_data, cleanup_database):
+    @pytest.mark.parametrize("reset_mode", MODES.keys())
+    def test_import(
+        self,
+        reset_mode,
+        test_data_dir,
+        default_export_data,
+        cleanup_database,
+    ):
         test_data_dir.mkdir(parents=True, exist_ok=True)
         (test_data_dir / "postgres-sequences.json").write_text(
             json.dumps([self.SAMPLE_DATA]),
@@ -101,6 +110,7 @@ class TestPostgresSequences:
             "devdata_import",
             test_data_dir.name,
             "--no-input",
+            f"--reset-mode={reset_mode}",
         )
         assert_ran_successfully(process)
 
