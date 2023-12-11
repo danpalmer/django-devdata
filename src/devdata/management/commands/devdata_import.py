@@ -12,7 +12,7 @@ from ...engine import (
     import_extras,
     validate_strategies,
 )
-from ...reset_modes import MODES
+from ...reset_modes import MODES, DropDatabaseReset
 from ...settings import settings
 
 
@@ -36,7 +36,7 @@ class Command(BaseCommand):
             choices=MODES.values(),
             type=MODES.__getitem__,
             help="How to ensure the database is empty before importing the new schema (default: %(default)s).",
-            default=MODES["drop"].slug,
+            default=DropDatabaseReset.slug,
         )
         parser.add_argument(
             "--no-input",
