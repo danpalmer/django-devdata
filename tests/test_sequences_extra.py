@@ -118,3 +118,50 @@ class TestPostgresSequences:
             cursor.execute("SELECT nextval('foo')")
             (value,) = cursor.fetchone()
             assert value == 18
+
+    @pytest.mark.parametrize("reset_mode", MODES.keys())
+    def test_import_over_existing_data(
+        self,
+        reset_mode,
+        test_data_dir,
+        default_export_data,
+        cleanup_database,
+    ):
+        test_data_dir.mkdir(parents=True, exist_ok=True)
+        (test_data_dir / "postgres-sequences.json").write_text(
+            json.dumps([self.SAMPLE_DATA]),
+        )
+
+        # Create an existing sequence of the same name, but with different properties
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                CREATE SEQUENCE foo
+                AS bigint
+                INCREMENT BY 9
+                MINVALUE 2
+                """,
+            )
+            cursor.execute("SELECT nextval('foo')")
+            cursor.execute("SELECT nextval('foo')")
+            (value,) = cursor.fetchone()
+            assert value == 11
+
+        # Ensure all database connections are closed before we attempt to import
+        # as this will need to drop the database.
+        for conn in connections.all():
+            conn.close()
+
+        # Run the import
+        process = run_command(
+            "devdata_import",
+            test_data_dir.name,
+            "--no-input",
+            f"--reset-mode={reset_mode}",
+        )
+        assert_ran_successfully(process)
+
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT nextval('foo'), nextval('foo')")
+            values = cursor.fetchone()
+            assert values == (18, 22)

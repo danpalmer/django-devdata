@@ -155,6 +155,19 @@ class PostgresSequences(ExtraExport, ExtraImport):
                 name = check_simple_value(sequence, key="sequencename")
                 data_type = check_simple_value(sequence, key="data_type")
 
+                # Support reset modes which don't drop the database. At some
+                # point it might be nice to be able to hook into the reset mode
+                # to remove sequences too, however that's likely complicated and
+                # it's easy enough to handle here.
+                #
+                # Sequences don't nicely fit into one of just schema or data,
+                # they're somewhat inherently both. Given that Django's
+                # "loaddata" over-writes existing rows in tables, it seems
+                # reasonable to do something similar for sequences -- even if
+                # that means we actually drop the sequence and fully re-create
+                # it.
+                cursor.execute(f"DROP SEQUENCE IF EXISTS {name}")
+
                 query = textwrap.dedent(
                     f"""
                     CREATE SEQUENCE {name}
