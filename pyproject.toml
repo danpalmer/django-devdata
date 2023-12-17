@@ -29,6 +29,9 @@ tox-gh-actions = "^2.4.0"
 psycopg2-binary = "^2.8.6"
 pytest-check = "^1.0.1"
 
+[tool.poetry.group.dev.dependencies]
+tox-pyenv = "^1.1.0"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

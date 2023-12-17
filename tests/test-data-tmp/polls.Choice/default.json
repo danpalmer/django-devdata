@@ -1,0 +1,29 @@
+[
+{
+  "model": "polls.choice",
+  "pk": 101,
+  "fields": {
+    "question": 101,
+    "choice_text": "choice 1",
+    "votes": 0
+  }
+},
+{
+  "model": "polls.choice",
+  "pk": 102,
+  "fields": {
+    "question": 101,
+    "choice_text": "choice 1",
+    "votes": 5
+  }
+},
+{
+  "model": "polls.choice",
+  "pk": 103,
+  "fields": {
+    "question": 102,
+    "choice_text": "choice 1",
+    "votes": 999
+  }
+}
+]
