@@ -5,6 +5,7 @@ Alternative implementations for ensuring a clean database before import.
 import abc
 
 from django.db import connections
+from django.db.migrations.recorder import MigrationRecorder
 
 from .settings import settings
 from .utils import nodb_cursor
@@ -94,7 +95,12 @@ class DropTablesReset(Reset):
 
         with connection.cursor() as cursor:
             table_names = connection.introspection.table_names(cursor)
+
             models = connection.introspection.installed_models(table_names)
+
+            if MigrationRecorder(connection).has_table():
+                models.add(MigrationRecorder.Migration)
+
             with connection.schema_editor() as editor:
                 for model in models:
                     editor.delete_model(model)

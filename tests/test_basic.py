@@ -4,6 +4,7 @@ import datetime
 
 import pytest
 from django.db import connections
+from django.db.migrations.recorder import MigrationRecorder
 from polls.models import Choice, Question
 from test_infrastructure import DevdataTestBase
 from test_infrastructure.utils import assert_ran_successfully, run_command
@@ -110,6 +111,12 @@ class TestPollsBasic(DevdataTestBase):
             votes=2,
         )
 
+        recorder = MigrationRecorder(connections["default"])
+        recorder.record_applied("fake-app", "0001-fake-migration")
+        assert recorder.applied_migrations().keys() == {
+            ("fake-app", "0001-fake-migration"),
+        }
+
         # Ensure all database connections are closed before we attempt to import
         # as this will need to drop the database.
         for connection in connections.all():
@@ -130,3 +137,8 @@ class TestPollsBasic(DevdataTestBase):
         # restored database access for later tests if needed.
         with django_db_blocker.unblock():
             self.assert_on_imported_data()
+
+        recorder = MigrationRecorder(connections["default"])
+        assert recorder.applied_migrations().keys() == {
+            ("auth", "0001_initial"),
+        }
