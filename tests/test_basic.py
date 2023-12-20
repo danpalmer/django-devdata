@@ -90,6 +90,7 @@ class TestPollsBasic(DevdataTestBase):
         test_data_dir,
         default_export_data,
         django_db_blocker,
+        ensure_migrations_table,
     ):
         self.dump_data_for_import(self.get_original_data(), test_data_dir)
 

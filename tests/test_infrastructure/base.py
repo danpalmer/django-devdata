@@ -8,7 +8,6 @@ from typing import Any, Dict, Iterable, Set
 import pytest
 from django.core import serializers
 from django.db import connections, transaction
-from django.db.migrations.recorder import MigrationRecorder
 
 from devdata.reset_modes import MODES
 from devdata.utils import to_app_model_label, to_model
@@ -111,10 +110,7 @@ class DevdataTestBase:
 
     # Test structure
 
-    def test_export(self, test_data_dir):
-        for connection in connections.all():
-            MigrationRecorder(connection).ensure_schema()
-
+    def test_export(self, test_data_dir, ensure_migrations_table):
         with transaction.atomic():
             data = json.dumps(self.get_original_data())
             objects = serializers.deserialize("json", data)
@@ -152,6 +148,7 @@ class DevdataTestBase:
         test_data_dir,
         default_export_data,
         django_db_blocker,
+        ensure_migrations_table,
     ):
         self.dump_data_for_import(self.get_original_data(), test_data_dir)
 

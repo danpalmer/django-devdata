@@ -3,7 +3,8 @@ import shutil
 from pathlib import Path
 
 import pytest
-from django.db import connection
+from django.db import connection, connections
+from django.db.migrations.recorder import MigrationRecorder
 
 ALL_TEST_STRATEGIES = (
     ("admin.LogEntry", "default"),
@@ -44,6 +45,23 @@ def default_export_data(test_data_dir):
     (test_data_dir / "migrations.json").write_text(empty_model)
 
     (test_data_dir / "postgres-sequences.json").write_text(empty_model)
+
+
+@pytest.fixture()
+def ensure_migrations_table():
+    # Ensure there's an existing django_migrations table, as there would be
+    # for a real database.
+    for conn in connections.all():
+        MigrationRecorder(conn).ensure_schema()
+
+    yield
+
+    # Remove the table at the end of the test, back to how the test database
+    # would normally be.
+    for conn in connections.all():
+        if MigrationRecorder(conn).has_table():
+            with conn.schema_editor() as editor:
+                editor.delete_model(MigrationRecorder.Migration)
 
 
 @pytest.fixture(autouse=True)
