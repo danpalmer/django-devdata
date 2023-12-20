@@ -59,7 +59,7 @@ jobs:
       - name: Set up Poetry
         uses: abatilo/actions-poetry@v2.1.5
         with:
-          poetry-version: 1.3.2
+          poetry-version: 1.7.1
 
       - name: Set up dependencies
         run: poetry install
@@ -85,7 +85,7 @@ jobs:
       - name: Set up Poetry
         uses: abatilo/actions-poetry@v2.1.5
         with:
-          poetry-version: 1.3.2
+          poetry-version: 1.7.1
 
       - name: Install dependencies
         run: |
@@ -111,7 +111,7 @@ jobs:
       - name: Set up Poetry
         uses: abatilo/actions-poetry@v2.1.5
         with:
-          poetry-version: 1.3.2
+          poetry-version: 1.7.1
 
       - uses: PeterJCLaw/validate-generated-files@v1
         with:
