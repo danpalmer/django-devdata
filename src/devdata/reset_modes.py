@@ -24,10 +24,6 @@ class Reset(abc.ABC):
         raise NotImplementedError
 
     @property
-    def requires_confirmation(self) -> bool:
-        return True
-
-    @property
     @abc.abstractclassmethod
     def description_for_confirmation(self) -> str:
         raise NotImplementedError
@@ -118,9 +114,7 @@ class NoReset(Reset):
 
     slug = "none"
 
-    requires_confirmation = False
-
-    description_for_confirmation = ""
+    description_for_confirmation = "merge into the existing database"
 
     def reset_database(self, django_dbname: str) -> None:
         pass
