@@ -93,10 +93,8 @@ class DropTablesReset(Reset):
         connection = connections[django_dbname]
 
         with connection.cursor() as cursor:
-            table_infos = connection.introspection.get_table_list(cursor)
-            models = connection.introspection.installed_models(
-                [x.name for x in table_infos],
-            )
+            table_names = connection.introspection.table_names(cursor)
+            models = connection.introspection.installed_models(table_names)
             with connection.schema_editor() as editor:
                 for model in models:
                     editor.delete_model(model)
