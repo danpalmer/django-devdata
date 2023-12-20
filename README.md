@@ -104,6 +104,10 @@ Exporting, anonymising, and importing, are all configurable, and
 
 #### Exporting
 
+``` console
+$ python manage.py devdata_export [dest] [app_label.ModelName ...]
+```
+
 This step allows a sync strategy to persist some data that will be used to
 create a new development database. For example, the `QuerySetStrategy` can
 export data from a table to a filesystem for later import.
@@ -124,6 +128,10 @@ step.
 
 #### Importing
 
+``` console
+$ python manage.py devdata_import [src]
+```
+
 This step is responsible for preparing the database and filling it. If any
 exporting strategies have been used those must have run first, or their outputs
 must have been downloaded if they are being shared/hosted somewhere.
@@ -131,6 +139,10 @@ must have been downloaded if they are being shared/hosted somewhere.
 Factory-based strategies generate data during this process.
 
 ##### Reset modes
+
+``` console
+$ python manage.py devdata_import --reset-mode=$MODE [src]
+```
 
 By default any existing database will be removed, ensuring that a fresh database
 is created for the imported data. This is expected to be the most common case
