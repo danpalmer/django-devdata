@@ -64,6 +64,18 @@ class ExtraExport:
 
 
 class PostgresSequences(ExtraExport, ExtraImport):
+    """
+    Export & import Postgres sequences.
+
+    This provides support for reproducing sequences of the same type and at the
+    same value in an imported database.
+
+    During import any existing sequence of the same name is silently removed and
+    replaced. This simplifies the interaction with each of the possible reset
+    modes and approximately matches how `loaddata` treats importing rows with
+    matching primary keys.
+    """
+
     def __init__(self, *args, name="postgres-sequences", **kwargs):
         super().__init__(*args, name=name, **kwargs)
 

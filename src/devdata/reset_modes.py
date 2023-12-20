@@ -69,7 +69,7 @@ class DropDatabaseReset(Reset):
 
 class DropTablesReset(Reset):
     """
-    Drop all the tables which Django knows about.
+    Drop all the tables which Django knows about, including migration history.
 
     This is suitable in cases where the current state of the database can be
     assumed to be similar enough to the new state that removing the tables alone
@@ -80,6 +80,10 @@ class DropTablesReset(Reset):
     This is expected to be useful in cases where Django is configured with
     administrative privileges within a database, but may not have access to drop
     the entire database.
+
+    Note: this will not touch other database entities (e.g: Postgres sequences &
+    views) which may be present but are not managed by Django models -- even if
+    they were created by running migrations (e.g: via `RunSQL`).
     """
 
     slug = "drop-tables"
@@ -110,6 +114,14 @@ class NoReset(Reset):
     target database or otherwise wants more control over the setup. The user is
     responsible for ensuring that the database is in a state ready to have the
     schema migrated into it.
+
+    Notes:
+     * As `loaddata` is used to import data, this mode may result in a merging
+       of the new and existing data (if there is any).
+     * Django's migrations table does not have any uniqueness constraints,
+       meaning that even identical rows may be reinserted and resulting in
+       apparently duplicate rows in that table. The effects of this on Django
+       are unknown. You have been warned.
     """
 
     slug = "none"
