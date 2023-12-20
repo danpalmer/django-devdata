@@ -155,20 +155,6 @@ class DevdataTestBase:
     ):
         self.dump_data_for_import(self.get_original_data(), test_data_dir)
 
-        # Ensure we have migrations history to import to validate that the
-        # import of such data actually works.
-        (test_data_dir / "migrations.json").write_text(
-            json.dumps(
-                [
-                    {
-                        "app": "auth",
-                        "name": "0001_initial",
-                        "applied": "2023-01-01T12:00:00.000Z",
-                    },
-                ],
-            ),
-        )
-
         # Ensure all database connections are closed before we attempt to import
         # as this will need to drop the database.
         for connection in connections.all():
