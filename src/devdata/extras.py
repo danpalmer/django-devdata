@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import json
 import textwrap
 from pathlib import Path
-from typing import Any, Callable, Dict, Set, Tuple
+from typing import Any, Callable
 
 from django.db import connections
 
@@ -14,7 +16,7 @@ class ExtraImport:
     """
 
     name: str
-    depends_on = ()  # type: Tuple[str, ...]
+    depends_on: tuple[str, ...] = ()
 
     def __init__(self) -> None:
         pass
@@ -29,7 +31,7 @@ class ExtraExport:
     Base extra defining how to get data out of an existing database.
     """
 
-    seen_names = set()  # type: Set[str]
+    seen_names: set[str] = set()
 
     def __init__(self, *args: Any, name: str, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -160,7 +162,7 @@ class PostgresSequences(ExtraExport, ExtraImport):
         with self.data_file(src).open() as f:
             sequences = json.load(f)
 
-        def check_simple_value(mapping: Dict[str, str], *, key: str) -> str:
+        def check_simple_value(mapping: dict[str, str], *, key: str) -> str:
             value = mapping[key]
             if not value.replace("_", "").isalnum():
                 raise ValueError(f"{key} is not alphanumeric")

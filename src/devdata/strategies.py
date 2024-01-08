@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Iterable
 from pathlib import Path
-from typing import Any, Callable, Set, Tuple, TypeVar
+from typing import Any, Callable, TypeVar
 
 from django.core import serializers
 from django.core.serializers.base import DeserializedObject
@@ -27,7 +27,7 @@ class Strategy:
     """
 
     name: str
-    depends_on = ()  # type: Tuple[str, ...]
+    depends_on: tuple[str, ...] = ()
 
     def __init__(self) -> None:
         pass
@@ -48,7 +48,7 @@ class Exportable:
     database.
     """
 
-    seen_names = set()  # type: Set[Tuple[str, str]]
+    seen_names: set[tuple[str, str]] = set()
 
     def __init__(self, *args: Any, name: str, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
