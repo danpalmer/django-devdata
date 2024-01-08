@@ -104,6 +104,10 @@ Exporting, anonymising, and importing, are all configurable, and
 
 #### Exporting
 
+``` console
+$ python manage.py devdata_export [dest] [app_label.ModelName ...]
+```
+
 This step allows a sync strategy to persist some data that will be used to
 create a new development database. For example, the `QuerySetStrategy` can
 export data from a table to a filesystem for later import.
@@ -124,11 +128,36 @@ step.
 
 #### Importing
 
-This step is responsible for creating a new database and filling it. If any
+``` console
+$ python manage.py devdata_import [src]
+```
+
+This step is responsible for preparing the database and filling it. If any
 exporting strategies have been used those must have run first, or their outputs
 must have been downloaded if they are being shared/hosted somewhere.
 
 Factory-based strategies generate data during this process.
+
+##### Reset modes
+
+``` console
+$ python manage.py devdata_import --reset-mode=$MODE [src]
+```
+
+By default any existing database will be removed, ensuring that a fresh database
+is created for the imported data. This is expected to be the most common case
+for local development, but may not always be suitable.
+
+The following modes are offered:
+
+- `drop-database`: the default; drops the database & re-creates it.
+- `drop-tables`: drops the tables the Django codebase is aware of, useful if the
+  Django database user doesn't have access to drop the entire database.
+- `none`: no attempt to reset the database, useful if the user has already
+  manually configured the database or otherwise wants more control over setup.
+
+See the docstrings in [`src/devdata/reset_modes.py`](src/devdata/reset_modes.py)
+for more details.
 
 ## Customising
 

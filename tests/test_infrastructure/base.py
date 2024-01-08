@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import collections
 import itertools
 import json
@@ -6,8 +8,8 @@ from typing import Any, Dict, Iterable, Set
 import pytest
 from django.core import serializers
 from django.db import connections, transaction
-from django.db.migrations.recorder import MigrationRecorder
 
+from devdata.reset_modes import MODES
 from devdata.utils import to_app_model_label, to_model
 
 from .utils import assert_ran_successfully, run_command
@@ -69,12 +71,46 @@ class DevdataTestBase:
                 ):
                     yield obj
 
+    def dump_data_for_import(self, original_data, test_data_dir):
+        # Write out data to the filesystem as if it had been exported
+        data: dict[str, dict[str, TestObject]]
+        data = collections.defaultdict(
+            lambda: collections.defaultdict(list),
+        )
+        exported_pks: dict[str, set] = collections.defaultdict(set)
+        for obj in original_data:
+            if obj["strategy"] is None:
+                continue
+            exported_pks[obj["model"]].add(obj["pk"])
+            data[obj["model"]][obj["strategy"]].append(obj)
+
+        for model, strategies in data.items():
+            for strategy, objects in strategies.items():
+                path = test_data_dir / model / f"{strategy}.json"
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(
+                    json.dumps(
+                        list(self._filter_exported(exported_pks, objects)),
+                    ),
+                )
+
+        # Ensure we have migrations history to import to validate that the
+        # import of such data actually works.
+        (test_data_dir / "migrations.json").write_text(
+            json.dumps(
+                [
+                    {
+                        "app": "auth",
+                        "name": "0001_initial",
+                        "applied": "2023-01-01T12:00:00.000Z",
+                    },
+                ],
+            ),
+        )
+
     # Test structure
 
-    def test_export(self, test_data_dir):
-        for connection in connections.all():
-            MigrationRecorder(connection).ensure_schema()
-
+    def test_export(self, test_data_dir, ensure_migrations_table):
         with transaction.atomic():
             data = json.dumps(self.get_original_data())
             objects = serializers.deserialize("json", data)
@@ -105,46 +141,16 @@ class DevdataTestBase:
 
         self.assert_on_exported_data(exported_data)
 
+    @pytest.mark.parametrize("reset_mode", MODES.keys())
     def test_import(
         self,
+        reset_mode,
         test_data_dir,
         default_export_data,
         django_db_blocker,
+        ensure_migrations_table,
     ):
-        # Write out data to the filesystem as if it had been exported
-        data = collections.defaultdict(
-            lambda: collections.defaultdict(list)
-        )  # type: Dict[str, Dict[str, TestObject]]
-        exported_pks = collections.defaultdict(set)  # type: Dict[str, Set]
-        for obj in self.get_original_data():
-            if obj["strategy"] is None:
-                continue
-            exported_pks[obj["model"]].add(obj["pk"])
-            data[obj["model"]][obj["strategy"]].append(obj)
-
-        for model, strategies in data.items():
-            for strategy, objects in strategies.items():
-                path = test_data_dir / model / f"{strategy}.json"
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(
-                    json.dumps(
-                        list(self._filter_exported(exported_pks, objects))
-                    )
-                )
-
-        # Ensure we have migrations history to import to validate that the
-        # import of such data actually works.
-        (test_data_dir / "migrations.json").write_text(
-            json.dumps(
-                [
-                    {
-                        "app": "auth",
-                        "name": "0001_initial",
-                        "applied": "2023-01-01T12:00:00.000Z",
-                    },
-                ],
-            ),
-        )
+        self.dump_data_for_import(self.get_original_data(), test_data_dir)
 
         # Ensure all database connections are closed before we attempt to import
         # as this will need to drop the database.
@@ -156,6 +162,7 @@ class DevdataTestBase:
             "devdata_import",
             test_data_dir.name,
             "--no-input",
+            f"--reset-mode={reset_mode}",
         )
         assert_ran_successfully(process)
 
