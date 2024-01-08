@@ -3,7 +3,8 @@ from __future__ import annotations
 import collections
 import itertools
 import json
-from typing import Any, Dict, Iterable, Set
+from pathlib import Path
+from typing import Any, Dict, Iterable
 
 import pytest
 from django.core import serializers
@@ -21,7 +22,7 @@ TestObject = Dict[str, Any]
 class DevdataTestBase:
     # Public API for tests
 
-    def get_original_data(self):
+    def get_original_data(self) -> list[TestObject]:
         raise NotImplementedError
 
     def assert_on_exported_data(self, exported_data):
@@ -48,11 +49,15 @@ class DevdataTestBase:
         return set(x["pk"] for x in exported)
 
     def _filter_exported(
-        self, lookup: Dict[str, Set], objects: Iterable[TestObject]
+        self,
+        lookup: dict[str, set[Any]],
+        objects: list[TestObject],
     ) -> Iterable[TestObject]:
         obj = objects[0]  # Same model so we just use the first for structure
         model_name = obj["model"]
         model = to_model(model_name)
+
+        assert model, model_name
 
         fk_fields = [
             (x.attname, to_app_model_label(x.related_model))
@@ -71,13 +76,17 @@ class DevdataTestBase:
                 ):
                     yield obj
 
-    def dump_data_for_import(self, original_data, test_data_dir):
+    def dump_data_for_import(
+        self,
+        original_data: list[TestObject],
+        test_data_dir: Path,
+    ) -> None:
         # Write out data to the filesystem as if it had been exported
-        data: dict[str, dict[str, TestObject]]
+        data: dict[str, dict[str, list[TestObject]]]
         data = collections.defaultdict(
             lambda: collections.defaultdict(list),
         )
-        exported_pks: dict[str, set] = collections.defaultdict(set)
+        exported_pks: dict[str, set[Any]] = collections.defaultdict(set)
         for obj in original_data:
             if obj["strategy"] is None:
                 continue

@@ -2,17 +2,22 @@
 devdata settings for tests.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 from devdata.strategies import (
     ExactQuerySetStrategy,
     LatestSampleQuerySetStrategy,
     QuerySetStrategy,
     RandomSampleQuerySetStrategy,
 )
+from devdata.types import Anonymiser
 
 from ..custom_strategies import InternalUsersStrategy
 
-DEVDATA_FIELD_ANONYMISERS = {}
-DEVDATA_MODEL_ANONYMISERS = {}
+DEVDATA_FIELD_ANONYMISERS: dict[str, Anonymiser] = {}
+DEVDATA_MODEL_ANONYMISERS: dict[str, dict[str, Anonymiser]] = {}
 
 DEVDATA_DEFAULT_STRATEGY = QuerySetStrategy(name="default")
 
@@ -77,6 +82,6 @@ DEVDATA_STRATEGIES = {
     ],
 }
 
-DEVDATA_EXTRA_STRATEGIES = [
+DEVDATA_EXTRA_STRATEGIES: list[tuple[str, dict[str, Any]]] = [
     ("devdata.extras.PostgresSequences", {}),
 ]

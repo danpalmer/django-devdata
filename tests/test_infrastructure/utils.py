@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import subprocess
 
@@ -17,9 +19,9 @@ def run_command(*command, **kwargs):
             # the pytest environment.
             "TEST_DATABASE_NAME": settings.DATABASES["default"]["NAME"],
         },
-        **kwargs
+        **kwargs,
     )
 
 
-def assert_ran_successfully(process: subprocess.Popen):
-    assert process.returncode == 0, process.stderr.decode("utf-8")
+def assert_ran_successfully(process: subprocess.Popen[bytes]) -> None:
+    assert process.returncode == 0, process.stderr.decode("utf-8")  # type: ignore[union-attr]

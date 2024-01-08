@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+from typing import Any
+
 from django.contrib.auth.models import User
 from test_infrastructure import DevdataTestBase, make_photo_data, make_user_data
 
 
 class TestFKRestriction(DevdataTestBase):
-    def get_original_data(self):
+    def get_original_data(self) -> list[dict[str, Any]]:
         return [
             # Internal user (included)
             make_user_data(101, "internal", is_superuser=True),

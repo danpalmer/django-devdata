@@ -127,7 +127,7 @@ jobs:
 
       - name: Type-check
         run: |
-          poetry run mypy src
+          poetry run mypy src tests
 
   validate-dependencies:
     name: Check dependency locks

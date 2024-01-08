@@ -28,7 +28,7 @@ ALL_TEST_STRATEGIES = (
 
 
 @pytest.fixture()
-def test_data_dir():
+def test_data_dir() -> Path:
     return Path(__file__).parent / "test-data-tmp"
 
 
