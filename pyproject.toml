@@ -58,6 +58,8 @@ strict_optional = true
 enable_error_code = "ignore-without-code"
 disallow_incomplete_defs = true
 disallow_any_generics = true
+disallow_untyped_decorators = true
+check_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = "django.*"
