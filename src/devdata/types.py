@@ -1,14 +1,15 @@
 import pathlib
-from typing import Any, Protocol, TypeVar
+from typing import Any, Generic, Protocol, TypeVar
 
 import faker
 
 T = TypeVar("T")
 
 
-class Anonymiser(Protocol):
+class GenericAnonymiser(Generic[T], Protocol):
     def __call__(
         self,
+        *,
         obj: Any,
         field: str,
         pii_value: T,
@@ -16,3 +17,7 @@ class Anonymiser(Protocol):
         dest: pathlib.Path,
     ) -> T:
         ...
+
+
+class Anonymiser(GenericAnonymiser[Any], Protocol):
+    pass

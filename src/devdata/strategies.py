@@ -1,4 +1,4 @@
-from typing import Set, Tuple
+from typing import Any, Set, Tuple
 
 from django.core import serializers
 from django.db import models
@@ -18,6 +18,7 @@ class Strategy:
     database.
     """
 
+    name: str
     depends_on = ()  # type: Tuple[str, ...]
 
     def __init__(self):
@@ -36,7 +37,7 @@ class Exportable:
 
     seen_names = set()  # type: Set[Tuple[str, str]]
 
-    def __init__(self, *args, name, **kwargs):
+    def __init__(self, *args: Any, name: str, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.name = name

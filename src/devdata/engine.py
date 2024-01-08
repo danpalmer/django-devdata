@@ -1,4 +1,8 @@
+from __future__ import annotations
+
 import json
+from collections.abc import Collection
+from pathlib import Path
 
 from django.core.management import call_command
 from django.core.management.color import no_style
@@ -20,14 +24,14 @@ from .utils import (
 )
 
 
-def validate_strategies(only=None):
+def validate_strategies(only: Collection[str] = ()) -> None:
     not_found = []
 
     for model in get_all_models():
         if model._meta.abstract:
             continue
 
-        app_model_label = to_app_model_label(model)
+        app_model_label = to_app_model_label(model)  # type: ignore[arg-type]  # mypy can't see that models are hashable
 
         if app_model_label not in settings.strategies:
             if only and app_model_label not in only:
@@ -49,7 +53,7 @@ def validate_strategies(only=None):
         )
 
 
-def export_migration_state(django_dbname, dest):
+def export_migration_state(django_dbname: str, dest: Path) -> None:
     file_path = migrations_file_path(dest)
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -69,7 +73,12 @@ def export_migration_state(django_dbname, dest):
             json.dump(migration_state, f, indent=4, cls=DjangoJSONEncoder)
 
 
-def export_data(django_dbname, dest, only=None, no_update=False):
+def export_data(
+    django_dbname: str,
+    dest: Path,
+    only: Collection[str] = (),
+    no_update: bool = False,
+) -> None:
     model_strategies = sort_model_strategies(settings.strategies)
     bar = progress(model_strategies)
     for app_model_label, strategy in bar:
@@ -100,7 +109,11 @@ def export_data(django_dbname, dest, only=None, no_update=False):
             )
 
 
-def export_extras(django_dbname, dest, no_update=False):
+def export_extras(
+    django_dbname: str,
+    dest: Path,
+    no_update: bool = False,
+) -> None:
     bar = progress(settings.extra_strategies)
     for strategy in bar:
         bar.set_postfix({"extra": strategy.name})
@@ -114,7 +127,7 @@ def export_extras(django_dbname, dest, no_update=False):
             )
 
 
-def import_schema(src, django_dbname):
+def import_schema(src: Path, django_dbname: str) -> None:
     connection = connections[django_dbname]
 
     with disable_migrations():
@@ -149,7 +162,7 @@ def import_schema(src, django_dbname):
         )
 
 
-def import_data(src, django_dbname):
+def import_data(src: Path, django_dbname: str) -> None:
     model_strategies = sort_model_strategies(settings.strategies)
     bar = progress(model_strategies)
     for app_model_label, strategy in bar:
@@ -160,14 +173,14 @@ def import_data(src, django_dbname):
         strategy.import_data(django_dbname, src, model)
 
 
-def import_extras(src, django_dbname):
+def import_extras(src: Path, django_dbname: str) -> None:
     bar = progress(settings.extra_strategies)
     for strategy in bar:
         bar.set_postfix({"extra": strategy.name})
         strategy.import_data(django_dbname, src)
 
 
-def import_cleanup(src, django_dbname):
+def import_cleanup(src: Path, django_dbname: str) -> None:
     conn = connections[django_dbname]
     with conn.cursor() as cursor:
         for reset_sql in conn.ops.sequence_reset_sql(
