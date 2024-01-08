@@ -1,14 +1,24 @@
+from __future__ import annotations
+
 import contextlib
 import functools
 import itertools
 import json
-from typing import Iterator, Optional, Tuple, TypeVar
+from collections.abc import Iterable
+from pathlib import Path
+from typing import Any, Iterator, Optional, Tuple, TypeVar, TYPE_CHECKING
 
 import django
 import tqdm
 from django.apps import apps
 from django.conf import settings as django_settings
 from django.db.models import Model
+
+if TYPE_CHECKING:
+    from .strategies import Strategy
+
+T = TypeVar("T")
+TModel = TypeVar("TModel", bound=Model)
 
 
 @functools.lru_cache(maxsize=1024)
@@ -26,19 +36,21 @@ def to_model(app_model_label: str) -> Optional[Model]:
         return None
 
 
-def get_all_models():
+def get_all_models() -> list[type[Model]]:
     return apps.get_models(include_auto_created=True)
 
 
-def migrations_file_path(dir):
+def migrations_file_path(dir: Path) -> Path:
     return dir / "migrations.json"
 
 
-def progress(sequence):
+def progress(sequence: Iterable[T]) -> tqdm.tqdm[T]:
     return tqdm.tqdm(sequence)
 
 
-def sort_model_strategies(model_strategies):
+def sort_model_strategies(
+    model_strategies: dict[str, list[Strategy]],
+) -> list[tuple[str, Strategy]]:
     model_dependencies = []
     models = set()
 
@@ -114,13 +126,19 @@ def sort_model_strategies(model_strategies):
 
 
 @functools.lru_cache(maxsize=32)
-def get_exported_pks_for_model(dest, model):
-    return [str(x["pk"]) for x in get_exported_objects_for_model(dest, model)]
+def get_exported_pks_for_model(dest: Path, model: type[Model]) -> list[str]:
+    return [
+        str(x["pk"])
+        for x in get_exported_objects_for_model(dest, model)  # type: ignore[arg-type]  # mypy can't see that models are hashable
+    ]
 
 
 @functools.lru_cache(maxsize=8)
-def get_exported_objects_for_model(dest, model):
-    app_model_label = to_app_model_label(model)
+def get_exported_objects_for_model(
+    dest: Path,
+    model: type[Model],
+) -> list[dict[str, Any]]:
+    app_model_label = to_app_model_label(model)  # type: ignore[arg-type]  # mypy can't see that models are hashable
     objects = []
 
     data_dir = dest / app_model_label
@@ -139,9 +157,6 @@ def get_exported_objects_for_model(dest, model):
     return objects
 
 
-T = TypeVar("T")
-
-
 def is_empty_iterator(iterator: Iterator[T]) -> Tuple[Iterator[T], bool]:
     try:
         first = next(iterator)
@@ -155,14 +170,14 @@ def is_empty_iterator(iterator: Iterator[T]) -> Tuple[Iterator[T], bool]:
 
 
 @contextlib.contextmanager
-def disable_migrations():
+def disable_migrations() -> Iterator[None]:
     original_migration_modules = django_settings.MIGRATION_MODULES
 
     class DisableMigrations:
-        def __contains__(self, item):
+        def __contains__(self, item: object) -> bool:
             return True
 
-        def __getitem__(self, item):
+        def __getitem__(self, item: object) -> None:
             return None
 
     django_settings.MIGRATION_MODULES = DisableMigrations()

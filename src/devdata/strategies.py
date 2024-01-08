@@ -1,6 +1,11 @@
-from typing import Set, Tuple
+from __future__ import annotations
+
+from collections.abc import Collection, Iterable
+from pathlib import Path
+from typing import Any, Callable, TypeVar
 
 from django.core import serializers
+from django.core.serializers.base import DeserializedObject
 from django.db import models
 
 from .pii_anonymisation import PiiAnonymisingSerializer
@@ -11,6 +16,9 @@ from .utils import (
     to_model,
 )
 
+TModel = TypeVar("TModel", bound=models.Model)
+Logger = Callable[[str], None]
+
 
 class Strategy:
     """
@@ -18,12 +26,18 @@ class Strategy:
     database.
     """
 
-    depends_on = ()  # type: Tuple[str, ...]
+    name: str
+    depends_on: tuple[str, ...] = ()
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
-    def import_data(self, django_dbname, src, model):
+    def import_data(
+        self,
+        django_dbname: str,
+        src: Path,
+        model: models.Model,
+    ) -> None:
         """Load data into newly created database."""
         raise NotImplementedError
 
@@ -34,31 +48,31 @@ class Exportable:
     database.
     """
 
-    seen_names = set()  # type: Set[Tuple[str, str]]
+    seen_names: set[tuple[str, str]] = set()
 
-    def __init__(self, *args, name, **kwargs):
+    def __init__(self, *args: Any, name: str, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.name = name
 
     def export_data(
         self,
-        django_dbname,
-        dest,
-        model,
-        no_update=False,
-        log=lambda x: None,
-    ):
+        django_dbname: str,
+        dest: Path,
+        model: models.Model,
+        no_update: bool = False,
+        log: Logger = lambda x: None,
+    ) -> None:
         """
         Export the data to a directory on disk. `no_update` indicates not to
         update if there is any data already existing locally.
         """
         pass
 
-    def data_file(self, dest, app_model_label):
+    def data_file(self, dest: Path, app_model_label: str) -> Path:
         return dest / app_model_label / "{}.json".format(self.name)
 
-    def ensure_dir_exists(self, dest, app_model_label):
+    def ensure_dir_exists(self, dest: Path, app_model_label: str) -> None:
         unique_key = (app_model_label, self.name)
         if unique_key in self.seen_names:
             raise ValueError(
@@ -79,11 +93,20 @@ class QuerySetStrategy(Exportable, Strategy):
 
     json_indent = 2
 
-    def __init__(self, *args, anonymise=True, **kwargs):
+    def __init__(
+        self,
+        *args: Any,
+        anonymise: bool = True,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.anonymise = anonymise
 
-    def get_restricted_pks(self, dest, model):
+    def get_restricted_pks(
+        self,
+        dest: Path,
+        model: models.Model,
+    ) -> dict[str, list[str]]:
         restricted_pks = {}
 
         for field in model._meta.fields:
@@ -101,7 +124,12 @@ class QuerySetStrategy(Exportable, Strategy):
 
         return restricted_pks
 
-    def get_queryset(self, django_dbname, dest, model):
+    def get_queryset(
+        self,
+        django_dbname: str,
+        dest: Path,
+        model: TModel,
+    ) -> models.QuerySet[TModel]:
         queryset = model.objects.using(django_dbname)
 
         for app_model_label, restrict_pks in self.get_restricted_pks(
@@ -135,12 +163,12 @@ class QuerySetStrategy(Exportable, Strategy):
 
     def export_data(
         self,
-        django_dbname,
-        dest,
-        model,
-        no_update=False,
-        log=lambda x: None,
-    ):
+        django_dbname: str,
+        dest: Path,
+        model: models.Model,
+        no_update: bool = False,
+        log: Logger = lambda x: None,
+    ) -> None:
         app_model_label = to_app_model_label(model)
         data_file = self.data_file(dest, app_model_label)
 
@@ -175,7 +203,12 @@ class QuerySetStrategy(Exportable, Strategy):
                 stream=output,
             )
 
-    def import_data(self, django_dbname, src, model):
+    def import_data(
+        self,
+        django_dbname: str,
+        src: Path,
+        model: models.Model,
+    ) -> None:
         app_model_label = to_app_model_label(model)
 
         try:
@@ -188,7 +221,13 @@ class QuerySetStrategy(Exportable, Strategy):
             print("Failed to import {} ({})".format(app_model_label, self.name))
             raise
 
-    def import_objects(self, django_dbname, src, model, objects):
+    def import_objects(
+        self,
+        django_dbname: str,
+        src: Path,
+        model: models.Model,
+        objects: Iterable[DeserializedObject],
+    ) -> None:
         qs = model.objects.using(django_dbname)
         existing_pks = set(qs.values_list("pk", flat=True))
         qs.bulk_create(
@@ -199,11 +238,16 @@ class QuerySetStrategy(Exportable, Strategy):
 class ExactQuerySetStrategy(QuerySetStrategy):
     """Import specific rows from a table using a QuerySet filtered to given PKs."""
 
-    def __init__(self, *args, pks, **kwargs):
+    def __init__(self, *args: Any, pks: Collection[Any], **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.pks = pks
 
-    def get_queryset(self, django_dbname, dest, model):
+    def get_queryset(
+        self,
+        django_dbname: str,
+        dest: Path,
+        model: TModel,
+    ) -> models.QuerySet[TModel]:
         return (
             super()
             .get_queryset(django_dbname, dest, model)
@@ -214,12 +258,17 @@ class ExactQuerySetStrategy(QuerySetStrategy):
 class RandomSampleQuerySetStrategy(QuerySetStrategy):
     """Imports a random sample from a QuerySet."""
 
-    def __init__(self, *args, count, **kwargs):
+    def __init__(self, *args: Any, count: int, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.count = count
 
-    def get_queryset(self, django_dbname, dest, model):
+    def get_queryset(
+        self,
+        django_dbname: str,
+        dest: Path,
+        model: TModel,
+    ) -> models.QuerySet[TModel]:
         return (
             super()
             .get_queryset(django_dbname, dest, model)
@@ -230,13 +279,24 @@ class RandomSampleQuerySetStrategy(QuerySetStrategy):
 class LatestSampleQuerySetStrategy(QuerySetStrategy):
     """Imports the latest items from a QuerySet."""
 
-    def __init__(self, *args, count, order_by="-id", **kwargs):
+    def __init__(
+        self,
+        *args: Any,
+        count: int,
+        order_by: str = "-id",
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
 
         self.count = count
         self.order_by = order_by
 
-    def get_queryset(self, django_dbname, dest, model):
+    def get_queryset(
+        self,
+        django_dbname: str,
+        dest: Path,
+        model: TModel,
+    ) -> models.QuerySet[TModel]:
         qs = super().get_queryset(django_dbname, dest, model)
         return qs.order_by(self.order_by)[: self.count]
 
@@ -259,16 +319,31 @@ class ModelReverseRelationshipQuerySetStrategy(QuerySetStrategy):
     to the exporting process, where they are available to `get_queryset`.
     """
 
-    def get_reverse_filter(self, dest, model):
+    def get_reverse_filter(
+        self,
+        dest: Path,
+        model: models.Model,
+    ) -> dict[str, Any]:
         raise NotImplementedError
 
-    def get_queryset(self, django_dbname, dest, model):
+    def get_queryset(
+        self,
+        django_dbname: str,
+        dest: Path,
+        model: TModel,
+    ) -> models.QuerySet[TModel]:
         qs = super().get_queryset(django_dbname, dest, model)
         return qs.filter(**self.get_reverse_filter(dest, model))
 
 
 class DeleteFirstQuerySetStrategy(QuerySetStrategy):
-    def import_objects(self, django_dbname, src, model, objects):
+    def import_objects(
+        self,
+        django_dbname: str,
+        src: Path,
+        model: models.Model,
+        objects: Iterable[DeserializedObject],
+    ) -> None:
         qs = model.objects.using(django_dbname)
         qs.all().delete()
         super().import_objects(django_dbname, src, model, objects)
@@ -284,10 +359,15 @@ class FactoryStrategy(Strategy):
         super().__init__(*args, **kwargs)
         self.factories = factories
 
-    def import_data(self, django_dbname, src, model):
+    def import_data(
+        self,
+        django_dbname: str,
+        src: Path,
+        model: models.Model,
+    ) -> None:
         pass
 
 
 class FailingStrategy(Exportable, Strategy):
-    def export_data(self, *args, **kwargs):
+    def export_data(self, *args: object, **kwargs: object) -> None:
         raise ValueError("This strategy always fails.")

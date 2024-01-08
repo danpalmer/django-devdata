@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+from typing import Any
+
 from test_infrastructure import DevdataTestBase
 from turtles.models import Turtle, World
 
 
 class TestCircularFK(DevdataTestBase):
-    def get_original_data(self):
+    def get_original_data(self) -> list[dict[str, Any]]:
         return [
             {
                 "model": "turtles.Turtle",

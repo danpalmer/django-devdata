@@ -2,6 +2,8 @@
 Django default settings, customised as necessary for testing.
 """
 
+from __future__ import annotations
+
 import os
 from pathlib import Path
 
@@ -11,7 +13,7 @@ SECRET_KEY = "fake-secret-key-for-testing"
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS: list[str] = []
 
 INSTALLED_APPS = [
     "django.contrib.admin",
