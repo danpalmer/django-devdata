@@ -29,6 +29,9 @@ tox-gh-actions = "^2.4.0"
 psycopg2-binary = "^2.8.6"
 pytest-check = "^1.0.1"
 
+mypy = "^1.8.0"
+types-tqdm = "^4.66.0.20240106"
+
 [tool.poetry.group.dev.dependencies]
 tox-pyenv = "^1.1.0"
 
@@ -46,6 +49,19 @@ force_grid_wrap = 0
 use_parentheses = true
 ensure_newline_before_comments = true
 line_length = 80
+
+[tool.mypy]
+warn_unused_configs = true
+
+# Be fairly strict with our types
+strict_optional = true
+enable_error_code = "ignore-without-code"
+disallow_incomplete_defs = true
+disallow_any_generics = true
+
+[[tool.mypy.overrides]]
+module = "django.*"
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "testsite.settings"

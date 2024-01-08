@@ -3,6 +3,7 @@ Alternative implementations for ensuring a clean database before import.
 """
 
 import abc
+from typing import ClassVar
 
 from django.db import connections
 from django.db.migrations.recorder import MigrationRecorder
@@ -14,19 +15,12 @@ MODES = {}
 
 
 class Reset(abc.ABC):
+    slug: ClassVar[str]  # read-only
+    description_for_confirmation: ClassVar[str]  # read-only
+
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
         MODES[cls.slug] = cls()
-
-    @property
-    @abc.abstractclassmethod
-    def slug(self) -> str:
-        raise NotImplementedError
-
-    @property
-    @abc.abstractclassmethod
-    def description_for_confirmation(self) -> str:
-        raise NotImplementedError
 
     def reset_database(self, django_dbname: str) -> None:
         raise NotImplementedError

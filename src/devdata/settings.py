@@ -1,12 +1,15 @@
+from __future__ import annotations
+
 from typing import Any
 
 from django.conf import settings as django_settings
 from django.utils.module_loading import import_string
 
+from .types import Anonymiser
 from .utils import get_all_models, to_app_model_label
 
-DEFAULT_FIELD_ANONYMISERS = {}
-DEFAULT_MODEL_ANONYMISERS = {}
+DEFAULT_FIELD_ANONYMISERS: dict[str, Anonymiser] = {}
+DEFAULT_MODEL_ANONYMISERS: dict[str, dict[str, Anonymiser]] = {}
 DEFAULT_FAKER_LOCALES = ["en_US"]
 
 
