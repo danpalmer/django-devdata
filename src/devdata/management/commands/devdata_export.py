@@ -7,8 +7,8 @@ from django.db.utils import DEFAULT_DB_ALIAS
 
 from ...engine import (
     export_data,
-    export_migration_state,
     export_extras,
+    export_migration_state,
     validate_strategies,
 )
 

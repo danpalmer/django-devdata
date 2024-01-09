@@ -8,8 +8,8 @@ from django.db.utils import DEFAULT_DB_ALIAS
 from ...engine import (
     import_cleanup,
     import_data,
-    import_schema,
     import_extras,
+    import_schema,
     validate_strategies,
 )
 from ...reset_modes import MODES, DropDatabaseReset
