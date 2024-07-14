@@ -6,7 +6,7 @@ fake = faker.Factory.create()
 
 
 def make_photo_data(
-    pk: int, strategy: Optional[str], **fields
+    pk: int, strategy: Optional[str], **fields: Any
 ) -> Dict[str, Any]:
     return {
         "model": "photofeed.Photo",
@@ -24,11 +24,14 @@ def make_photo_data(
 
 
 def make_user_data(
-    pk: int, strategy: Optional[str], **fields
+    pk: int, strategy: Optional[str], **fields: Any
 ) -> Dict[str, Any]:
     return {
         "model": "auth.User",
         "strategy": strategy,
         "pk": pk,
-        "fields": {"username": fake.user_name(), **fields},
+        "fields": {
+            "username": fake.user_name(),  # type: ignore[attr-defined]
+            **fields,
+        },
     }

@@ -1,12 +1,24 @@
+import pathlib
 import random
+from typing import Any, TypeVar
 
+import faker
+from django.db import models
+
+from .types import Anonymiser, GenericAnonymiser
 from .utils import get_exported_pks_for_model
+
+T = TypeVar("T")
 
 
 def faker_anonymise(
-    generator, *args, preserve_nulls=False, unique=False, **kwargs
-):
-    def anonymise(*, pii_value, fake, **_kwargs):
+    generator: str,
+    *args: Any,
+    preserve_nulls: bool = False,
+    unique: bool = False,
+    **kwargs: Any,
+) -> Anonymiser:
+    def anonymise(*, pii_value: T, fake: faker.Faker, **_kwargs: object) -> T:
         if preserve_nulls and pii_value is None:
             return None
 
@@ -16,8 +28,15 @@ def faker_anonymise(
     return anonymise
 
 
-def preserve_internal(alternative):
-    def anonymise(obj, field, pii_value, **kwargs):
+def preserve_internal(
+    alternative: GenericAnonymiser[T],
+) -> GenericAnonymiser[T]:
+    def anonymise(
+        obj: models.Model,
+        field: str,
+        pii_value: T,
+        **kwargs: Any,
+    ) -> T:
         if getattr(obj, "is_superuser", False) or getattr(
             obj, "is_staff", False
         ):
@@ -27,8 +46,8 @@ def preserve_internal(alternative):
     return anonymise
 
 
-def const(value, preserve_nulls=False):
-    def anonymise(*_, pii_value, **_kwargs):
+def const(value: T, preserve_nulls: bool = False) -> GenericAnonymiser[T]:
+    def anonymise(*_: object, pii_value: T, **_kwargs: object) -> T:
         if preserve_nulls and pii_value is None:
             return None
         return value
@@ -36,7 +55,12 @@ def const(value, preserve_nulls=False):
     return anonymise
 
 
-def random_foreign_key(obj, field, dest, **_kwargs):
+def random_foreign_key(
+    obj: models.Model,
+    field: str,
+    dest: pathlib.Path,
+    **_kwargs: object,
+) -> Any:
     related_model = obj._meta.get_field(field).related_model
     exported_pks = get_exported_pks_for_model(dest, related_model)
     return random.choice(exported_pks)

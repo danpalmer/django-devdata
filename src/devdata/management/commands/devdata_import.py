@@ -12,19 +12,20 @@ from ...engine import (
     import_schema,
     validate_strategies,
 )
-from ...reset_modes import MODES, DropDatabaseReset
+from ...reset_modes import MODES, DropDatabaseReset, Reset
 from ...settings import settings
 
 
 class Command(BaseCommand):
     help = "Create new database and import data into it."
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser: argparse.ArgumentParser) -> None:
         parser.add_argument(
             "src",
             nargs=argparse.OPTIONAL,
             help="Import source",
             default="./devdata",
+            type=Path,
         )
         parser.add_argument(
             "--database",
@@ -44,7 +45,14 @@ class Command(BaseCommand):
             action="store_true",
         )
 
-    def handle(self, src, database, reset_mode, no_input=False, **options):
+    def handle(
+        self,
+        src: Path,
+        database: str,
+        reset_mode: Reset,
+        no_input: bool = False,
+        **options: object
+    ) -> None:
         try:
             validate_strategies()
         except AssertionError as e:

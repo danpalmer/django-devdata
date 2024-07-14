@@ -3,56 +3,77 @@ from __future__ import annotations
 import collections
 import itertools
 import json
-from typing import Any, Dict, Iterable, Set
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Union, cast
 
 import pytest
 from django.core import serializers
 from django.db import connections, transaction
+from pytest_django import DjangoDbBlocker
 
-from devdata.reset_modes import MODES
+from devdata.reset_modes import MODES, Reset
 from devdata.utils import to_app_model_label, to_model
 
 from .utils import assert_ran_successfully, run_command
 
 TestObject = Dict[str, Any]
+ExportedData = Dict[
+    str,
+    Union[
+        # migrations.json
+        List[Dict[str, str]],
+        # model -> strategy -> list[TestObject]
+        Dict[str, List[TestObject]],
+    ],
+]
 
 
 @pytest.mark.django_db(transaction=True)
 class DevdataTestBase:
     # Public API for tests
 
-    def get_original_data(self):
+    def get_original_data(self) -> list[TestObject]:
         raise NotImplementedError
 
-    def assert_on_exported_data(self, exported_data):
+    def assert_on_exported_data(self, exported_data: ExportedData) -> None:
         pass
 
-    def assert_on_imported_data(self):
+    def assert_on_imported_data(self) -> None:
         pass
 
     # Utils
 
-    def original_pks(self, model):
+    def original_pks(self, model: str) -> set[int]:
         return set(
             x["pk"]
             for x in self.get_original_data()
             if x["model"].lower() == model.lower()
         )
 
-    def exported_pks(self, exported_data, model, strategy=None):
-        strategies = exported_data[model]
+    def exported_pks(
+        self,
+        exported_data: ExportedData,
+        model: str,
+        strategy: str | None = None,
+    ) -> set[int]:
+        strategies = cast(Dict[str, List[TestObject]], exported_data[model])
         if strategy is not None:
+            exported: Iterable[TestObject]
             exported = strategies[strategy]
         else:
             exported = itertools.chain(*strategies.values())
         return set(x["pk"] for x in exported)
 
     def _filter_exported(
-        self, lookup: Dict[str, Set], objects: Iterable[TestObject]
+        self,
+        lookup: dict[str, set[Any]],
+        objects: list[TestObject],
     ) -> Iterable[TestObject]:
         obj = objects[0]  # Same model so we just use the first for structure
         model_name = obj["model"]
         model = to_model(model_name)
+
+        assert model, model_name
 
         fk_fields = [
             (x.attname, to_app_model_label(x.related_model))
@@ -71,13 +92,17 @@ class DevdataTestBase:
                 ):
                     yield obj
 
-    def dump_data_for_import(self, original_data, test_data_dir):
+    def dump_data_for_import(
+        self,
+        original_data: list[TestObject],
+        test_data_dir: Path,
+    ) -> None:
         # Write out data to the filesystem as if it had been exported
-        data: dict[str, dict[str, TestObject]]
+        data: dict[str, dict[str, list[TestObject]]]
         data = collections.defaultdict(
             lambda: collections.defaultdict(list),
         )
-        exported_pks: dict[str, set] = collections.defaultdict(set)
+        exported_pks: dict[str, set[Any]] = collections.defaultdict(set)
         for obj in original_data:
             if obj["strategy"] is None:
                 continue
@@ -110,7 +135,11 @@ class DevdataTestBase:
 
     # Test structure
 
-    def test_export(self, test_data_dir, ensure_migrations_table):
+    def test_export(
+        self,
+        test_data_dir: Path,
+        ensure_migrations_table: None,
+    ) -> None:
         with transaction.atomic():
             data = json.dumps(self.get_original_data())
             objects = serializers.deserialize("json", data)
@@ -125,31 +154,30 @@ class DevdataTestBase:
         assert_ran_successfully(process)
 
         # Read in the exported data
-        exported_data = {}
+        exported_data: ExportedData = {}
         for child in test_data_dir.iterdir():
             if child.name == "migrations.json":
                 with child.open() as f:
+                    # list[dict[str, str]]
                     exported_data["migrations"] = json.load(f)
             else:
-                exported_data[child.name] = {}
+                exported_data[child.name] = model_data = {}
                 if child.is_dir():
                     for strategy_file in child.iterdir():
                         with strategy_file.open() as f:
-                            exported_data[child.name][
-                                strategy_file.stem
-                            ] = json.load(f)
+                            model_data[strategy_file.stem] = json.load(f)
 
         self.assert_on_exported_data(exported_data)
 
     @pytest.mark.parametrize("reset_mode", MODES.keys())
     def test_import(
         self,
-        reset_mode,
-        test_data_dir,
-        default_export_data,
-        django_db_blocker,
-        ensure_migrations_table,
-    ):
+        reset_mode: Reset,
+        test_data_dir: Path,
+        default_export_data: None,
+        django_db_blocker: DjangoDbBlocker,
+        ensure_migrations_table: None,
+    ) -> None:
         self.dump_data_for_import(self.get_original_data(), test_data_dir)
 
         # Ensure all database connections are closed before we attempt to import

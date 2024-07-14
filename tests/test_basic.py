@@ -2,19 +2,21 @@ from __future__ import annotations
 
 import datetime
 import json
+from pathlib import Path
 
 import pytest
 from django.db import connections
 from django.db.migrations.recorder import MigrationRecorder
 from polls.models import Choice, Question
-from test_infrastructure import DevdataTestBase
+from pytest_django import DjangoDbBlocker
+from test_infrastructure import DevdataTestBase, ExportedData, TestObject
 from test_infrastructure.utils import assert_ran_successfully, run_command
 
-from devdata.reset_modes import MODES
+from devdata.reset_modes import MODES, Reset
 
 
 class TestPollsBasic(DevdataTestBase):
-    def get_original_data(self):
+    def get_original_data(self) -> list[TestObject]:
         return [
             {
                 "model": "polls.Question",
@@ -66,7 +68,7 @@ class TestPollsBasic(DevdataTestBase):
             },
         ]
 
-    def assert_on_exported_data(self, exported_data):
+    def assert_on_exported_data(self, exported_data: ExportedData) -> None:
         orig_questions = self.original_pks("polls.Question")
         exported_questions = self.exported_pks(exported_data, "polls.Question")
         assert orig_questions.issubset(exported_questions)
@@ -75,9 +77,9 @@ class TestPollsBasic(DevdataTestBase):
         exported_choices = self.exported_pks(exported_data, "polls.Choice")
         assert orig_choices.issubset(exported_choices)
 
-    def assert_on_imported_data(self):
+    def assert_on_imported_data(self) -> None:
         assert sorted(
-            Question.objects.values_list("question_text", flat=True)
+            Question.objects.values_list("question_text", flat=True),
         ) == ["Test 1", "Test 2"]
         assert Choice.objects.count() == 3
         assert Question.objects.get(pk=101).choice_set.count() == 2
@@ -88,12 +90,12 @@ class TestPollsBasic(DevdataTestBase):
     )
     def test_import_over_existing_data(
         self,
-        reset_mode,
-        test_data_dir,
-        default_export_data,
-        django_db_blocker,
-        ensure_migrations_table,
-    ):
+        reset_mode: Reset,
+        test_data_dir: Path,
+        default_export_data: None,
+        django_db_blocker: DjangoDbBlocker,
+        ensure_migrations_table: None,
+    ) -> None:
         self.dump_data_for_import(self.get_original_data(), test_data_dir)
 
         question = Question.objects.create(
@@ -146,11 +148,11 @@ class TestPollsBasic(DevdataTestBase):
 
     def test_import_over_existing_data_reset_mode_none(
         self,
-        test_data_dir,
-        default_export_data,
-        django_db_blocker,
-        ensure_migrations_table,
-    ):
+        test_data_dir: Path,
+        default_export_data: None,
+        django_db_blocker: DjangoDbBlocker,
+        ensure_migrations_table: None,
+    ) -> None:
         self.dump_data_for_import(self.get_original_data(), test_data_dir)
 
         # A slightly extended migration history to explore conflicts & overwriting

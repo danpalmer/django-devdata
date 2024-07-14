@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 from pathlib import Path
 
@@ -22,6 +24,7 @@ class Command(BaseCommand):
             nargs=argparse.OPTIONAL,
             help="Export destination",
             default="./devdata",
+            type=Path,
         )
         parser.add_argument(
             "only",
@@ -40,7 +43,15 @@ class Command(BaseCommand):
             action="store_true",
         )
 
-    def handle(self, *, dest, only=None, database, no_update, **options):
+    def handle(
+        self,
+        *,
+        dest: Path,
+        only: list[str],
+        database: str,
+        no_update: bool,
+        **options: object,
+    ) -> None:
         try:
             for app_model_label in only:
                 apps.get_model(app_model_label, require_ready=False)

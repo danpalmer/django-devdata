@@ -1,10 +1,11 @@
 import json
+from pathlib import Path
 
 import pytest
 from django.db import connection, connections
 from test_infrastructure import assert_ran_successfully, run_command
 
-from devdata.reset_modes import MODES
+from devdata.reset_modes import MODES, Reset
 
 
 @pytest.mark.django_db(transaction=True)
@@ -23,10 +24,10 @@ class TestPostgresSequences:
 
     def test_export(
         self,
-        test_data_dir,
-        cleanup_database,
-        ensure_migrations_table,
-    ):
+        test_data_dir: Path,
+        cleanup_database: None,
+        ensure_migrations_table: None,
+    ) -> None:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -58,10 +59,10 @@ class TestPostgresSequences:
 
     def test_export_unused_sequence(
         self,
-        test_data_dir,
-        cleanup_database,
-        ensure_migrations_table,
-    ):
+        test_data_dir: Path,
+        cleanup_database: None,
+        ensure_migrations_table: None,
+    ) -> None:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
@@ -93,11 +94,11 @@ class TestPostgresSequences:
     @pytest.mark.parametrize("reset_mode", MODES.keys())
     def test_import(
         self,
-        reset_mode,
-        test_data_dir,
-        default_export_data,
-        cleanup_database,
-    ):
+        reset_mode: Reset,
+        test_data_dir: Path,
+        default_export_data: None,
+        cleanup_database: None,
+    ) -> None:
         test_data_dir.mkdir(parents=True, exist_ok=True)
         (test_data_dir / "postgres-sequences.json").write_text(
             json.dumps([self.SAMPLE_DATA]),
@@ -125,11 +126,11 @@ class TestPostgresSequences:
     @pytest.mark.parametrize("reset_mode", MODES.keys())
     def test_import_over_existing_data(
         self,
-        reset_mode,
-        test_data_dir,
-        default_export_data,
-        cleanup_database,
-    ):
+        reset_mode: Reset,
+        test_data_dir: Path,
+        default_export_data: None,
+        cleanup_database: None,
+    ) -> None:
         test_data_dir.mkdir(parents=True, exist_ok=True)
         (test_data_dir / "postgres-sequences.json").write_text(
             json.dumps([self.SAMPLE_DATA]),

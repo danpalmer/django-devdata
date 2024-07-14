@@ -1,17 +1,23 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
 import faker
 from django.core.serializers.json import Serializer as JSONSerializer
+from django.db import models
 
 from .settings import settings
 from .utils import to_app_model_label
 
 
 class PiiAnonymisingSerializer(JSONSerializer):
-    def __init__(self, *args, dest, **kwargs):
+    def __init__(self, *args: Any, dest: Path, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.fake = faker.Faker(locale=settings.faker_locales)
         self.dest = dest
 
-    def get_dump_object(self, obj):
+    def get_dump_object(self, obj: models.Model) -> dict[str, Any]:
         data = super().get_dump_object(obj)
 
         for field, value in data["fields"].items():

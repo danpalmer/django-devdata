@@ -1,6 +1,7 @@
 import json
 import shutil
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 from django.db import connection, connections
@@ -28,12 +29,12 @@ ALL_TEST_STRATEGIES = (
 
 
 @pytest.fixture()
-def test_data_dir():
+def test_data_dir() -> Path:
     return Path(__file__).parent / "test-data-tmp"
 
 
 @pytest.fixture()
-def default_export_data(test_data_dir):
+def default_export_data(test_data_dir: Path) -> None:
     # Write out defaults of empty exports for everything first, not all
     # tests will use all models.
     empty_model = json.dumps([])
@@ -48,7 +49,7 @@ def default_export_data(test_data_dir):
 
 
 @pytest.fixture()
-def ensure_migrations_table():
+def ensure_migrations_table() -> Iterator[None]:
     # Ensure there's an existing django_migrations table, as there would be
     # for a real database.
     for conn in connections.all():
@@ -65,13 +66,13 @@ def ensure_migrations_table():
 
 
 @pytest.fixture(autouse=True)
-def cleanup_test_data(test_data_dir):
+def cleanup_test_data(test_data_dir: Path) -> Iterator[None]:
     yield
     shutil.rmtree(test_data_dir, ignore_errors=True)
 
 
 @pytest.fixture()
-def cleanup_database():
+def cleanup_database() -> Iterator[None]:
     yield
 
     with connection.cursor() as cursor:

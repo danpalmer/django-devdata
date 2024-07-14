@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import json
 import textwrap
 from pathlib import Path
-from typing import Callable, Dict, Set, Tuple
+from typing import Any, Callable
 
 from django.db import connections
 
-Logger = Callable[[object], None]
+Logger = Callable[[str], None]
 
 
 class ExtraImport:
@@ -13,7 +15,8 @@ class ExtraImport:
     Base extra defining how to get data into a fresh database.
     """
 
-    depends_on = ()  # type: Tuple[str, ...]
+    name: str
+    depends_on: tuple[str, ...] = ()
 
     def __init__(self) -> None:
         pass
@@ -28,9 +31,9 @@ class ExtraExport:
     Base extra defining how to get data out of an existing database.
     """
 
-    seen_names = set()  # type: Set[Tuple[str, str]]
+    seen_names: set[str] = set()
 
-    def __init__(self, *args, name, **kwargs):
+    def __init__(self, *args: Any, name: str, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
 
         self.name = name
@@ -76,7 +79,12 @@ class PostgresSequences(ExtraExport, ExtraImport):
     matching primary keys.
     """
 
-    def __init__(self, *args, name="postgres-sequences", **kwargs):
+    def __init__(
+        self,
+        *args: Any,
+        name: str = "postgres-sequences",
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, name=name, **kwargs)
 
     def export_data(
@@ -154,7 +162,7 @@ class PostgresSequences(ExtraExport, ExtraImport):
         with self.data_file(src).open() as f:
             sequences = json.load(f)
 
-        def check_simple_value(mapping: Dict[str, str], *, key: str) -> str:
+        def check_simple_value(mapping: dict[str, str], *, key: str) -> str:
             value = mapping[key]
             if not value.replace("_", "").isalnum():
                 raise ValueError(f"{key} is not alphanumeric")

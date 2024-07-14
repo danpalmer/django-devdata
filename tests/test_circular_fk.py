@@ -1,9 +1,11 @@
-from test_infrastructure import DevdataTestBase
+from __future__ import annotations
+
+from test_infrastructure import DevdataTestBase, ExportedData, TestObject
 from turtles.models import Turtle, World
 
 
 class TestCircularFK(DevdataTestBase):
-    def get_original_data(self):
+    def get_original_data(self) -> list[TestObject]:
         return [
             {
                 "model": "turtles.Turtle",
@@ -43,15 +45,15 @@ class TestCircularFK(DevdataTestBase):
             },
         ]
 
-    def assert_on_exported_data(self, exported_data):
+    def assert_on_exported_data(self, exported_data: ExportedData) -> None:
         exported_turtle_pks = self.exported_pks(exported_data, "turtles.Turtle")
         assert exported_turtle_pks == set((1, 2, 3, 4))
 
         exported_workd_pks = self.exported_pks(exported_data, "turtles.World")
         assert exported_workd_pks == set((9, 13))
 
-    def assert_on_imported_data(self):
+    def assert_on_imported_data(self) -> None:
         assert set(Turtle.objects.values_list("pk", flat=True)) == set(
-            (1, 2, 3, 4)
+            (1, 2, 3, 4),
         )
         assert set(World.objects.values_list("pk", flat=True)) == set((9, 13))
